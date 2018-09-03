@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!-- Settings for the Optical flow computation program -->
+<OpticalFlow>
+  
+  <Input>
+    <Path inputPath="e:\Data\original\rub\"/>
+    
+    <Mode Nx="584" Ny="388" imageType="8-bit">
+      
+    <Files file1 ="rub1.pgm" file2 ="rub2.pgm"/>
+    </Mode>
+  </Input>
+
+  <Parameters>
+    <Method mode ="2d" run="flow" key="1" />
+
+    <Solver>
+      <Iterations inner="5" outer="20"/>
+      <Warping levels="20" scaling="0.9" medianRadius="5"/>
+      <Model sigma="0.45" alpha ="3.5" e_smooth="0.001" e_data="0.001"/>
+    </Solver>
+    
+  </Parameters>
+
+  <Output>
+    <Path outputPath="e:\Data\test\"/>
+  </Output>
+</OpticalFlow>
