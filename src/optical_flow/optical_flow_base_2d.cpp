@@ -21,6 +21,8 @@
 
 #include "src/optical_flow/optical_flow_base_2d.h"
 
+#include <cmath>
+
 OpticalFlowBase2D::OpticalFlowBase2D(const char* name)
   : name_(name)
 {

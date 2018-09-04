@@ -23,6 +23,7 @@
 
 #include <cuda.h>
 #include <vector_types.h>
+#include <cstring>
 
 #include "src/data_types/data_structs.h"
 #include "src/utils/common_utils.h"

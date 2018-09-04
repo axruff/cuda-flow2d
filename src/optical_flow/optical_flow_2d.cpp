@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 //#include "../viewflow3d/src/visualization.h"
 #include "src/utils/common_utils.h"

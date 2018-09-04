@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <climits>
+#include <cstring>
 
 #include <cuda.h>
 

@@ -22,7 +22,7 @@
 #include "cuda_operation_solve_2d.h"
 
 #include <cstdio>
-
+#include <cstring>
 #include <vector_types.h>
 
 #include "src/data_types/data_structs.h"

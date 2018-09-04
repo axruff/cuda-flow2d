@@ -22,6 +22,7 @@
 #include "cuda_operation_base.h"
 
 #include <cstdio>
+#include <cstring>
 
 #include "src/utils/cuda_utils.h"
 
