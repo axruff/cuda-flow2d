@@ -12,11 +12,10 @@ CUDA-INC-DIR = -I$(CUDA-TOP)/include
 CUDA-LIB-DIR = -L$(CUDA-TOP)/lib64 -lcudart -lcuda
 CUDA-FLAGS   = -ptx
 
-# $(wildcard *.cpp /xxx/xxx/*.cpp): get all .cpp files from the current directory and dir "/xxx/xxx/"
 SRCS := $(wildcard $(BASEDIR)/src/*.cpp \
 			$(BASEDIR)/src/*/*/*.cpp \
 			$(BASEDIR)/src/*/*.cpp)
-# $(patsubst %.cpp,%.o,$(SRCS)): substitute all ".cpp" file name strings to ".o" file name strings
+
 OBJS := $(patsubst %.cpp,%.o,$(SRCS))
 
 CUDAOBJECTS 	= $(CUDASOURCES:.cu=.ptx)
