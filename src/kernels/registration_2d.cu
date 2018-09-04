@@ -58,8 +58,8 @@ extern "C" __global__ void registration_2d(
       float delta_x = x_f - (float) x;
       float delta_y = y_f - (float) y;
 
-      int x_1 = min(width -1, size_t(x + 1));
-      int y_1 = min(height - 1, size_t(y + 1));
+      int x_1 = min(int(width -1), x + 1);
+      int y_1 = min(int(height - 1), y + 1);
 
       float value =
         (1.f - delta_x) * (1.f - delta_y) * frame_1[IND(x  , y )] +
