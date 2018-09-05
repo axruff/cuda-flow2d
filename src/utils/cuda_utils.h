@@ -37,7 +37,7 @@ inline bool __CheckCudaError(CUresult error, const char* file, const int line)
     const char *error_name = nullptr;
     const char *error_string = nullptr;
 
-//#define NEW_CUDA_DRIVER
+#define NEW_CUDA_DRIVER
 #ifdef NEW_CUDA_DRIVER
     cuGetErrorName(error, &error_name);
     cuGetErrorString(error, &error_string);

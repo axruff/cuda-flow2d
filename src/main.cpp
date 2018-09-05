@@ -28,6 +28,9 @@
 
 #include "src/optical_flow/optical_flow_2d.h"
 
+#include "src/correlation/correlation_flow_2d.h"
+//#include "test_correlation.h"
+
 #include "src/data_types/data2d.h"
 #include "src/data_types/data_structs.h"
 #include "src/data_types/operation_parameters.h"
@@ -41,11 +44,6 @@ using namespace OpticFlow;
 int main(int argc, char** argv)
 {
 
-    std::printf("//----------------------------------------------------------------------//\n");
-    std::printf("//            2D Optical flow using NVIDIA CUDA. Version 0.5.0	        //\n");
-    std::printf("//                                                                      //\n");
-    std::printf("//            Karlsruhe Institute of Technology. 2015 - 2018            //\n");
-    std::printf("//----------------------------------------------------------------------//\n");
 
     /* Initialize CUDA */
     CUcontext cu_context;
@@ -53,7 +51,103 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    bool test_correlation = true;
 
+    if (test_correlation) {
+        std::printf("//----------------------------------------------------------------------//\n");
+        std::printf("//        2D Correlation flow (Test) using NVIDIA CUDA. Version 0.5	   \n");
+        std::printf("//                                                                        \n");
+        std::printf("//           Author: Alexey Ershov. <ershov.alexey@gmail.com>             \n");
+        std::printf("//            Karlsruhe Institute of Technology. 2009 - 2018              \n");
+        std::printf("//----------------------------------------------------------------------//\n");
+
+        const bool key_press = true;
+        const bool use_visualization = false;
+        const bool silent_mode = true;
+
+        const size_t width = 128;
+        const size_t height = 128;
+
+        /* Correlation flow variables */
+        size_t  correlation_window_size = 18;
+
+
+        /*------------------------------------------------------*/
+        /*               Correlation algorithm                  */
+        /*------------------------------------------------------*/
+
+        /* Correlation flow computation class */
+        CorrelationFlow2D correlation_flow;
+
+        Data2D image;
+        DataSize3 image_size ={ width, height, 1 };
+
+        /* Load input data */
+        if (!image.ReadRAWFromFileF32("./data/real_frame-128-128.raw", image_size.width, image_size.height)) {
+            //if (!image.ReadRAWFromFileU8("./data/squares_many.raw", image_size.width, image_size.height)) {
+            //if (!image.ReadRAWFromFileF32("./data/73_flat_corr.raw", image_size.width, image_size.height)) {
+            return 2;
+        }
+
+
+        if (correlation_flow.Initialize(image_size, correlation_window_size)) {
+
+
+
+            Data2D flow_x(image_size.width, image_size.height);
+            Data2D flow_y(image_size.width, image_size.height);
+            Data2D corr(image_size.width, image_size.height);
+
+            Data2D corr_temp(image_size.width*correlation_window_size, image_size.height*correlation_window_size);
+
+            correlation_flow.silent = silent_mode;
+
+            OperationParameters params;
+            // params.PushValuePtr("correlation_window_size", &correlation_window_size);
+            //params.PushValuePtr("warp_scale_factor", &warp_scale_factor);
+
+
+            correlation_flow.ComputeFlow(image, flow_x, flow_y, corr, corr_temp, params);
+
+            std::string filename =
+                "-" + std::to_string(width) +
+                "-" + std::to_string(height) + ".raw";
+
+            std::string filename_ext =
+                "-" + std::to_string(width*correlation_window_size) +
+                "-" + std::to_string(height*correlation_window_size) + ".raw";
+
+            flow_x.WriteRAWToFileF32(std::string("./data/output/corr-flow-x" + filename).c_str());
+            flow_y.WriteRAWToFileF32(std::string("./data/output/corr-flow-y" + filename).c_str());
+            corr.WriteRAWToFileF32(std::string("./data/output/corr-coeff" + filename).c_str());
+
+            corr_temp.WriteRAWToFileF32(std::string("./data/output/corr-temp" + filename_ext).c_str());
+
+            IOUtils::WriteFlowToImageRGB(flow_x, flow_y, 3, "./data/output/corr-res.pgm");
+
+
+
+            correlation_flow.Destroy();
+        }
+
+        if (key_press) {
+            std::printf("Press enter to continue...");
+            std::getchar();
+        }
+
+
+        /* Release resources */
+        cuCtxDestroy(cu_context);
+
+        return 0;
+        
+    }
+
+    std::printf("//----------------------------------------------------------------------//\n");
+    std::printf("//            2D Optical flow using NVIDIA CUDA. Version 0.5.0	        //\n");
+    std::printf("//                                                                      //\n");
+    std::printf("//            Karlsruhe Institute of Technology. 2015 - 2018            //\n");
+    std::printf("//----------------------------------------------------------------------//\n");
 
   const bool key_press = true;
   const bool use_visualization = false;
