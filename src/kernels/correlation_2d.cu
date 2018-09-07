@@ -7,6 +7,7 @@
 #include <device_functions.h>
 #include <math_functions.h>
 
+
 #include "src/data_types/data_structs.h"
 
 
@@ -184,5 +185,186 @@ extern "C" __global__ void correlation_2d(
     }
         
     
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+extern "C" __global__ void find_peak_2d(
+    const float* input,
+    const size_t width,
+    const size_t height,
+    const size_t window_size,
+    const size_t min_distance,
+    const size_t extended_pitch,
+    float* flow_x,
+    float* flow_y,
+    float* corr,
+    float* corr_ext
+    )
+{
+    dim3 global_id(blockDim.x * blockIdx.x + threadIdx.x,
+        blockDim.y * blockIdx.y + threadIdx.y);
+
+    const int radius_2 = min_distance;
+
+
+    dim3 shared_block_size(
+        blockDim.x + 2 * min_distance,
+        blockDim.y + 2 * min_distance
+        );
+
+    /* Load data to the shared memoty */
+    size_t global_x = global_id.x < width ? global_id.x : 2 * width - global_id.x - 2;
+    size_t global_y = global_id.y < height ? global_id.y : 2 * height - global_id.y - 2;
+
+
+    
+
+    /* Main area */
+    shared[SIND(threadIdx.x, threadIdx.y)] = input[EIND(global_x, global_y)];
+
+    /* Left slice */
+    if (threadIdx.x < radius_2) {
+        int offset = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
+        size_t global_x_l = offset >= 0 ? offset : -offset;
+        shared[SIND(-radius_2 + threadIdx.x, threadIdx.y)] = input[IND(global_x_l, global_y)];
+    }
+
+    /* Right slice */
+    if (threadIdx.x > blockDim.x - 1 - radius_2) {
+        int index = blockDim.x - threadIdx.x;
+        int offset = blockDim.x *(blockIdx.x + 1) + radius_2 - index;
+        size_t global_x_r = offset < width ? offset : 2 * width - offset - 2;
+        shared[SIND(radius_2 + threadIdx.x, threadIdx.y)] = input[IND(global_x_r, global_y)];
+    }
+
+    /* Upper slice */
+    if (threadIdx.y < radius_2) {
+        int offset = blockDim.y * blockIdx.y - radius_2 + threadIdx.y;
+        size_t global_y_u = offset >= 0 ? offset : -offset;
+        shared[SIND(threadIdx.x, -radius_2 + threadIdx.y)] = input[IND(global_x, global_y_u)];
+    }
+
+    /* Bottom slice */
+    if (threadIdx.y > blockDim.y - 1 - radius_2) {
+        int index = blockDim.y - threadIdx.y;
+        int offset = blockDim.y *(blockIdx.y + 1) + radius_2 - index;
+        size_t global_y_b = offset < height ? offset : 2 * height - offset - 2;
+        shared[SIND(threadIdx.x, radius_2 + threadIdx.y)] = input[IND(global_x, global_y_b)];
+    }
+
+    /* 4 corners */
+    {
+        int global_x_c;
+        int global_y_c;
+
+        if (threadIdx.x < radius_2 && threadIdx.y < radius_2) {
+
+            global_x_c = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
+            global_x_c = global_x_c > 0 ? global_x_c : -global_x_c;
+
+            global_y_c = blockDim.y * blockIdx.y - radius_2 + threadIdx.y;
+            global_y_c = global_y_c > 0 ? global_y_c : -global_y_c;
+
+            /* Front upper left */
+            shared[SIND(threadIdx.x - radius_2, threadIdx.y - radius_2)] =
+                input[IND(global_x_c, global_y_c)];
+
+            /* Front upper right */
+            global_x_c = blockDim.x *(blockIdx.x + 1) + threadIdx.x;
+            global_x_c = global_x_c < width ? global_x_c : 2 * width - global_x_c - 2;
+            shared[SIND(blockDim.x + threadIdx.x, threadIdx.y - radius_2)] =
+                input[IND(global_x_c, global_y_c)];
+
+            /* Front bottom right */
+            global_y_c = blockDim.y *(blockIdx.y + 1) + threadIdx.y;
+            global_y_c = global_y_c < height ? global_y_c : 2 * height - global_y_c - 2;
+            shared[SIND(blockDim.x + threadIdx.x, blockDim.y + threadIdx.y)] =
+                input[IND(global_x_c, global_y_c)];
+
+            /* Front bottom left */
+            global_x_c = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
+            global_x_c = global_x_c > 0 ? global_x_c : -global_x_c;
+            shared[SIND(threadIdx.x - radius_2, blockDim.y + threadIdx.y)] =
+                input[IND(global_x_c, global_y_c)];
+
+        }
+    }
+
+  
+
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< //
+    // -------------------------------------------------------- //
+    __syncthreads();
+    // -------------------------------------------------------- //
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< //
+
+    float eps = 1e-4;
+
+    if (global_id.x < width && global_id.y < height) {
+
+        float local_max = 0.0f;
+
+
+        for (int i=(-min_distance); i <= static_cast<int>(min_distance); i++) {
+            for (int j=(-min_distance); j <= static_cast<int>(min_distance); j++) {
+
+                int lx = threadIdx.x + i;
+                int ly = threadIdx.y + j;
+
+
+                float val = shared[SIND(lx, ly)];
+
+                //if (blockIdx.x == 1 && blockIdx.y == 0 && lx == 9 && ly == 9)
+                 //   std::printf("lx:%u ly:%u dval: %f \n", lx, ly, val);
+
+                if (val > local_max)
+                    local_max = val;
+
+
+                
+            }
+        }
+
+        //corr_ext[EIND(global_id.x, global_id.y)] = global_id.x;
+
+        //corr_ext[EIND(global_id.x, global_id.y)] = local_max;
+
+        corr_ext[EIND(global_id.x, global_id.y)] = shared[SIND(threadIdx.x, threadIdx.y)];
+
+      /*  float val = shared[SIND(threadIdx.x, threadIdx.y)];
+        if (fabsf(val - local_max) < eps)
+            corr_ext[EIND(global_id.x, global_id.y)] = val;
+        else 
+            corr_ext[EIND(global_id.x, global_id.y)] = 0.0f;*/
+
+
+
+
+    }
+
+
 
 }

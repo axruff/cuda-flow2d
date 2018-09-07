@@ -31,6 +31,8 @@
 #include "src/utils/common_utils.h"
 #include "src/utils/cuda_utils.h"
 
+using namespace std;
+
 CudaOperationCorrelation2D::CudaOperationCorrelation2D()
   : CudaOperationBase("CUDA Correlation 2D")
 {
@@ -55,7 +57,9 @@ bool CudaOperationCorrelation2D::Initialize(const OperationParameters* params)
   std::strcat(exec_path, "/kernels/correlation_2d.ptx");
 
   if (!CheckCudaError(cuModuleLoad(&cu_module_, exec_path))) {
-    if (!CheckCudaError(cuModuleGetFunction(&cuf_correlation_, cu_module_, "correlation_2d"))) {
+
+    if (!CheckCudaError(cuModuleGetFunction(&cuf_correlation_, cu_module_, "correlation_2d")) &&
+        !CheckCudaError(cuModuleGetFunction(&cuf_find_peak_, cu_module_, "find_peak_2d"))) {
       size_t const_size;
 
       /* Get the pointer to the constant memory and copy data */
@@ -144,6 +148,7 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
     std::cout<<"Pitch: "<<extended_pitch_size<<std::endl;
 
     
+    // TODO: Delete unused variables
     void* args[9] = { 
         &dev_image,
         &data_size.width,
@@ -162,5 +167,48 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
                                     NULL,
                                     args,
                                     NULL));
+
+    
+
+    CheckCudaError(cuStreamSynchronize(NULL));
+    
+    
+    size_t min_distance = 1;
+
+    size_t ext_width = data_size.width*corr_window_size;
+    size_t ext_height = data_size.height*corr_window_size;
+
+    block_dim ={ 16, 16 };
+
+    grid_dim ={ static_cast<unsigned int>((ext_width  + block_dim.x - 1) / block_dim.x),
+        static_cast<unsigned int>((ext_height + block_dim.y - 1) / block_dim.y) };
+
+    cout<<"Grid dim:"<<grid_dim.x<<" "<<grid_dim.y<<endl;
+
+    needed_shared_memory_size =
+        (block_dim.x + 2 * min_distance) * (block_dim.y + 2 * min_distance) * sizeof(float);
+
+    cout<<"Width:"<<ext_width<<endl;
+    cout<<"Height:"<<ext_height<<endl;
+
+    void* args2[10] ={
+        &dev_corr_ext,
+        &ext_width,
+        &ext_height,
+        &corr_window_size,
+        &min_distance,
+        &extended_pitch_size,
+        &dev_flow_x,
+        &dev_flow_y,
+        &dev_corr,
+        &dev_corr_ext };
+
+    CheckCudaError(cuLaunchKernel(cuf_find_peak_,
+        grid_dim.x, grid_dim.y, grid_dim.z,
+        block_dim.x, block_dim.y, block_dim.z,
+        needed_shared_memory_size,
+        NULL,
+        args2,
+        NULL));
 
 }

@@ -69,7 +69,7 @@ int main(int argc, char** argv)
         const size_t height = 128;
 
         /* Correlation flow variables */
-        size_t  correlation_window_size = 18;
+        size_t  correlation_window_size = 16;
 
 
         /*------------------------------------------------------*/

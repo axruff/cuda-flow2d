@@ -30,6 +30,7 @@
 class CudaOperationCorrelation2D : public CudaOperationBase {
 private:
   CUfunction cuf_correlation_;
+  CUfunction cuf_find_peak_;
 
   DataSize3 dev_container_size_;
 
