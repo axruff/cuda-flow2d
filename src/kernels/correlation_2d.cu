@@ -249,7 +249,7 @@ extern "C" __global__ void find_peak_2d(
     if (threadIdx.x < radius_2) {
         int offset = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
         size_t global_x_l = offset >= 0 ? offset : -offset;
-        shared[SIND(-radius_2 + threadIdx.x, threadIdx.y)] = input[IND(global_x_l, global_y)];
+        shared[SIND(-radius_2 + threadIdx.x, threadIdx.y)] = input[EIND(global_x_l, global_y)];
     }
 
     /* Right slice */
@@ -257,14 +257,14 @@ extern "C" __global__ void find_peak_2d(
         int index = blockDim.x - threadIdx.x;
         int offset = blockDim.x *(blockIdx.x + 1) + radius_2 - index;
         size_t global_x_r = offset < width ? offset : 2 * width - offset - 2;
-        shared[SIND(radius_2 + threadIdx.x, threadIdx.y)] = input[IND(global_x_r, global_y)];
+        shared[SIND(radius_2 + threadIdx.x, threadIdx.y)] = input[EIND(global_x_r, global_y)];
     }
 
     /* Upper slice */
     if (threadIdx.y < radius_2) {
         int offset = blockDim.y * blockIdx.y - radius_2 + threadIdx.y;
         size_t global_y_u = offset >= 0 ? offset : -offset;
-        shared[SIND(threadIdx.x, -radius_2 + threadIdx.y)] = input[IND(global_x, global_y_u)];
+        shared[SIND(threadIdx.x, -radius_2 + threadIdx.y)] = input[EIND(global_x, global_y_u)];
     }
 
     /* Bottom slice */
@@ -272,7 +272,7 @@ extern "C" __global__ void find_peak_2d(
         int index = blockDim.y - threadIdx.y;
         int offset = blockDim.y *(blockIdx.y + 1) + radius_2 - index;
         size_t global_y_b = offset < height ? offset : 2 * height - offset - 2;
-        shared[SIND(threadIdx.x, radius_2 + threadIdx.y)] = input[IND(global_x, global_y_b)];
+        shared[SIND(threadIdx.x, radius_2 + threadIdx.y)] = input[EIND(global_x, global_y_b)];
     }
 
     /* 4 corners */
@@ -290,25 +290,25 @@ extern "C" __global__ void find_peak_2d(
 
             /* Front upper left */
             shared[SIND(threadIdx.x - radius_2, threadIdx.y - radius_2)] =
-                input[IND(global_x_c, global_y_c)];
+                input[EIND(global_x_c, global_y_c)];
 
             /* Front upper right */
             global_x_c = blockDim.x *(blockIdx.x + 1) + threadIdx.x;
             global_x_c = global_x_c < width ? global_x_c : 2 * width - global_x_c - 2;
             shared[SIND(blockDim.x + threadIdx.x, threadIdx.y - radius_2)] =
-                input[IND(global_x_c, global_y_c)];
+                input[EIND(global_x_c, global_y_c)];
 
             /* Front bottom right */
             global_y_c = blockDim.y *(blockIdx.y + 1) + threadIdx.y;
             global_y_c = global_y_c < height ? global_y_c : 2 * height - global_y_c - 2;
             shared[SIND(blockDim.x + threadIdx.x, blockDim.y + threadIdx.y)] =
-                input[IND(global_x_c, global_y_c)];
+                input[EIND(global_x_c, global_y_c)];
 
             /* Front bottom left */
             global_x_c = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
             global_x_c = global_x_c > 0 ? global_x_c : -global_x_c;
             shared[SIND(threadIdx.x - radius_2, blockDim.y + threadIdx.y)] =
-                input[IND(global_x_c, global_y_c)];
+                input[EIND(global_x_c, global_y_c)];
 
         }
     }
