@@ -31,9 +31,6 @@ extern "C" __global__ void correlation_2d(
         const size_t height,
         const size_t window_size,
         const size_t extended_pitch,
-        float* flow_x,
-        float* flow_y,
-        float* corr,
         float* corr_ext
         )
 {
@@ -135,9 +132,6 @@ extern "C" __global__ void correlation_2d(
 
 
     if (global_id.x < width && global_id.y < height) {
-        flow_x[IND(global_id.x, global_id.y)] = blockIdx.x;
-        flow_y[IND(global_id.x, global_id.y)] = blockIdx.y;
-        corr[IND(global_id.x, global_id.y)] = blockIdx.x*blockIdx.y;
 
         float norm_sum = 0.0f;
         float val = 0.0f;
@@ -189,28 +183,6 @@ extern "C" __global__ void correlation_2d(
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 extern "C" __global__ void find_peak_2d(
     const float* input,
     const size_t width,
@@ -218,9 +190,6 @@ extern "C" __global__ void find_peak_2d(
     const size_t window_size,
     const size_t min_distance,
     const size_t extended_pitch,
-    float* flow_x,
-    float* flow_y,
-    float* corr,
     float* corr_ext
     )
 {
@@ -352,19 +321,66 @@ extern "C" __global__ void find_peak_2d(
 
         //corr_ext[EIND(global_id.x, global_id.y)] = local_max;
 
-        corr_ext[EIND(global_id.x, global_id.y)] = shared[SIND(threadIdx.x, threadIdx.y)];
+        //corr_ext[EIND(global_id.x, global_id.y)] = shared[SIND(threadIdx.x, threadIdx.y)];
 
-      /*  float val = shared[SIND(threadIdx.x, threadIdx.y)];
+        float val = shared[SIND(threadIdx.x, threadIdx.y)];
         if (fabsf(val - local_max) < eps)
             corr_ext[EIND(global_id.x, global_id.y)] = val;
         else 
-            corr_ext[EIND(global_id.x, global_id.y)] = 0.0f;*/
+            corr_ext[EIND(global_id.x, global_id.y)] = 0.0f;
 
 
-
+        
 
     }
 
 
+
+}
+
+
+extern "C" __global__ void select_peak_2d(
+    const float* input,
+    const size_t width,
+    const size_t height,
+    const size_t window_size,
+    const size_t extended_pitch,
+    float* flow_x,
+    float* flow_y,
+    float* corr
+    )
+{
+    dim3 global_id(blockDim.x * blockIdx.x + threadIdx.x,
+        blockDim.y * blockIdx.y + threadIdx.y);
+
+    const int radius_2 = window_size / 2.0;
+
+    dim3 shared_block_size(
+        blockDim.x + 2 * radius_2,
+        blockDim.y + 2 * radius_2
+        );
+
+    size_t global_x = global_id.x < width ? global_id.x : 2 * width - global_id.x - 2;
+    size_t global_y = global_id.y < height ? global_id.y : 2 * height - global_id.y - 2;
+
+    float max_val = 0.0f;
+    float peak_threshold = 0.1f;
+
+    for (int i=0; i<window_size; i++) {
+        for (int j=0; j<window_size; j++) {
+            float val = input[EIND(global_id.x*window_size+i, global_id.y*window_size+j)];
+
+            if (val > max_val && (fabsf(val - 1.0f) > 1e-5))
+                max_val = val;
+
+          
+        }
+    }
+
+    if (global_id.x < width && global_id.y < height) {
+        corr[IND(global_x, global_y)] = max_val;
+        flow_x[IND(global_x, global_y)] = blockIdx.x;
+        flow_y[IND(global_x, global_y)] = blockIdx.y;
+    }
 
 }

@@ -59,7 +59,8 @@ bool CudaOperationCorrelation2D::Initialize(const OperationParameters* params)
   if (!CheckCudaError(cuModuleLoad(&cu_module_, exec_path))) {
 
     if (!CheckCudaError(cuModuleGetFunction(&cuf_correlation_, cu_module_, "correlation_2d")) &&
-        !CheckCudaError(cuModuleGetFunction(&cuf_find_peak_, cu_module_, "find_peak_2d"))) {
+        !CheckCudaError(cuModuleGetFunction(&cuf_find_peak_, cu_module_, "find_peak_2d")) &&
+        !CheckCudaError(cuModuleGetFunction(&cuf_select_peak_, cu_module_, "select_peak_2d")) ) {
       size_t const_size;
 
       /* Get the pointer to the constant memory and copy data */
@@ -131,6 +132,11 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
     CheckCudaError(cuDeviceGet(&cu_device, 0));
     CheckCudaError(cuDeviceGetAttribute(&shared_memory_size, CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK, cu_device));
 
+
+    /*-------------------------------------------*/
+    /* Step 1: Compute correlation*/
+    /*-------------------------------------------*/
+
     //int radius_2 = block_dim.x / 2;
     int radius_2 = corr_window_size / 2;
 
@@ -148,16 +154,12 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
     std::cout<<"Pitch: "<<extended_pitch_size<<std::endl;
 
     
-    // TODO: Delete unused variables
-    void* args[9] = { 
+    void* args[6] = { 
         &dev_image,
         &data_size.width,
         &data_size.height,
         &corr_window_size,
         &extended_pitch_size,
-        &dev_flow_x,
-        &dev_flow_y,
-        &dev_corr, 
         &dev_corr_ext };
 
     CheckCudaError(cuLaunchKernel(cuf_correlation_,
@@ -172,6 +174,9 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
 
     CheckCudaError(cuStreamSynchronize(NULL));
     
+    /*-------------------------------------------*/
+    /* Step 2: Find peaks*/
+    /*-------------------------------------------*/
     
     size_t min_distance = 1;
 
@@ -191,17 +196,14 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
     cout<<"Width:"<<ext_width<<endl;
     cout<<"Height:"<<ext_height<<endl;
 
-    void* args2[10] ={
+    void* args2[7] ={
         &dev_corr_ext,
         &ext_width,
         &ext_height,
         &corr_window_size,
         &min_distance,
         &extended_pitch_size,
-        &dev_flow_x,
-        &dev_flow_y,
-        &dev_corr,
-        &dev_corr_ext };
+        &dev_corr_max_ext };
 
     CheckCudaError(cuLaunchKernel(cuf_find_peak_,
         grid_dim.x, grid_dim.y, grid_dim.z,
@@ -209,6 +211,40 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
         needed_shared_memory_size,
         NULL,
         args2,
+        NULL));
+
+
+    CheckCudaError(cuStreamSynchronize(NULL));
+
+
+    /*---------------------------------------------------------------*/
+    /* Step 3: Select peaks and corresponding velocity components*/
+    /*--------------------------------------------------------------*/
+
+    block_dim ={ 16, 16 };
+
+    grid_dim ={ static_cast<unsigned int>((data_size.width  + block_dim.x - 1) / block_dim.x),
+        static_cast<unsigned int>((data_size.height + block_dim.y - 1) / block_dim.y) };
+
+    needed_shared_memory_size = 0;
+
+
+    void* args3[8] ={
+        &dev_corr_max_ext,
+        &ext_width,
+        &ext_height,
+        &corr_window_size,
+        &extended_pitch_size,
+        &dev_flow_x,
+        &dev_flow_y,
+        &dev_corr};
+
+    CheckCudaError(cuLaunchKernel(cuf_select_peak_,
+        grid_dim.x, grid_dim.y, grid_dim.z,
+        block_dim.x, block_dim.y, block_dim.z,
+        needed_shared_memory_size,
+        NULL,
+        args3,
         NULL));
 
 }
