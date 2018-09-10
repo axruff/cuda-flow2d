@@ -364,23 +364,55 @@ extern "C" __global__ void select_peak_2d(
     size_t global_y = global_id.y < height ? global_id.y : 2 * height - global_id.y - 2;
 
     float max_val = 0.0f;
+
+    float m1 = 0.0f;
+    float m2 = 0.0f;
+
+    float x1 = 0.0f;
+    float x2 = 0.0f;
+
+    float y1 = 0.0f;
+    float y2 = 0.0f;
+
+    const float EPS = 1e-5;
+
+
     float peak_threshold = 0.1f;
 
     for (int i=0; i<window_size; i++) {
         for (int j=0; j<window_size; j++) {
             float val = input[EIND(global_id.x*window_size+i, global_id.y*window_size+j)];
 
-            if (val > max_val && (fabsf(val - 1.0f) > 1e-5))
-                max_val = val;
+            if (val > m1 && (fabsf(val - 1.0f) > EPS)) {
+                m1 = val;
+                x1 = i;
+                y1 = j;
+            }
 
+      
+            if (val > m2 && (fabsf(val - 1.0f) > EPS) && ((i != x1) || (j != y1))) {
+                m2 = val;
+                x2 = i;
+                y2 = j;
+            }
           
         }
     }
 
     if (global_id.x < width && global_id.y < height) {
-        corr[IND(global_x, global_y)] = max_val;
-        flow_x[IND(global_x, global_y)] = blockIdx.x;
-        flow_y[IND(global_x, global_y)] = blockIdx.y;
+
+        float m = 0.0f;
+        float x = 0.0f;
+        float y = 0.0f;
+
+        m = (m1 > m2) ? m1 : m2;
+        x = (m1 > m2) ? x1 : x2;
+        y = (m1 > m2) ? y1 : y2;
+
+
+        corr[IND(global_x, global_y)] = m;
+        flow_x[IND(global_x, global_y)] = x - window_size / 2.0;
+        flow_y[IND(global_x, global_y)] = y - window_size / 2.0;
     }
 
 }
