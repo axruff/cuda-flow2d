@@ -65,8 +65,8 @@ int main(int argc, char** argv)
         const bool use_visualization = false;
         const bool silent_mode = true;
 
-        const size_t width = 512;
-        const size_t height = 256;
+        const size_t width = 128;
+        const size_t height = 128;
 
         /* Correlation flow variables */
         size_t  correlation_window_size = 18;
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
         DataSize3 image_size ={ width, height, 1 };
 
         /* Load input data */
-        if (!image.ReadRAWFromFileF32("./data/real_frame-512-256.raw", image_size.width, image_size.height)) {
+        if (!image.ReadRAWFromFileF32("./data/real_frame-128-128.raw", image_size.width, image_size.height)) {
             //if (!image.ReadRAWFromFileU8("./data/squares_many.raw", image_size.width, image_size.height)) {
             //if (!image.ReadRAWFromFileF32("./data/73_flat_corr.raw", image_size.width, image_size.height)) {
             return 2;
@@ -124,6 +124,8 @@ int main(int argc, char** argv)
             corr_temp.WriteRAWToFileF32(std::string("./data/output/corr-temp" + filename_ext).c_str());
 
             IOUtils::WriteFlowToImageRGB(flow_x, flow_y, 3, "./data/output/corr-res.pgm");
+
+            IOUtils::WriteMagnitudeToFileF32(flow_x, flow_y, std::string("./data/output/corr-amp" + filename).c_str());
 
 
 

@@ -78,6 +78,41 @@ void IOUtils::WriteFlowToImageRGB(Data2D& u, Data2D& v, float flowMaxScale, stri
 
 }
 
+void IOUtils::WriteMagnitudeToFileF32(Data2D& u, Data2D& v, string fileName)
+{
+    //char str[300];
+
+    fstream ofile(fileName.c_str(), ios::out | ios::binary);
+
+    if (!ofile.is_open())
+    {
+        std::cerr << "Error: cannot save file " << std::endl;
+        exit(255);
+    }
+
+    int nx = u.Width();
+    int ny = u.Height();
+
+
+    float res;
+
+    float * buf = new float[nx];
+
+    for (int i = 0; i < ny; i++) {
+        for (int j = 0; j < nx; j++) {
+
+            res = sqrt(u.Data(j, i)*u.Data(j, i) + v.Data(j, i)*v.Data(j, i));
+
+            buf[j] = res;
+        }
+        ofile.write((char *)buf, nx * sizeof(float));
+    }
+
+    delete[] buf;
+
+    ofile.close();
+}
+
 RGBColor::RGBColor()
 {
     this->r = 0;

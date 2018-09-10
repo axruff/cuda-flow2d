@@ -50,6 +50,7 @@ namespace IOUtils {
     // 2D Writing Routines
     //------------------------------------------------------------------
     void WriteFlowToImageRGB(Data2D& u, Data2D& v, float flowMaxScale, string fileName);
+    void WriteMagnitudeToFileF32(Data2D& u, Data2D& v, string fileName);
 
     // Data convertion routines
     RGBColor ConvertToRGB(float x, float y);
