@@ -7,16 +7,23 @@ TARGET := cuda-flow2d
 
 CUDA-TOP     = /usr/local/cuda-7.0
 CUDA         = $(CUDA-TOP)/bin/nvcc 
+#CUDA         = $/usr/bin/nvcc                          # ESRF lbs191 GPU machine
 
-CUDA-INC-DIR = -I$(CUDA-TOP)/include
-CUDA-LIB-DIR = -L$(CUDA-TOP)/lib64 -lcudart -lcuda
-CUDA-FLAGS   = -ptx
+CUDA-INC-DIR = -I$(CUDA-TOP)/include                    
+CUDA-LIB-DIR = -L$(CUDA-TOP)/lib64 -lcudart -lcuda      
 
-# $(wildcard *.cpp /xxx/xxx/*.cpp): get all .cpp files from the current directory and dir "/xxx/xxx/"
+#CUDA-INC-DIR = -I/usr/include                               # ESRF lbs191 GPU machine
+#CUDA-LIB-DIR = -L/usr/lib/x86_64-linux-gnu/ -lcudart -lcuda   # ESRF lbs191 GPU machine
+
+CUDA-FLAGS   = -ptx -std=c++11
+
+
+
+
 SRCS := $(wildcard $(BASEDIR)/src/*.cpp \
 			$(BASEDIR)/src/*/*/*.cpp \
 			$(BASEDIR)/src/*/*.cpp)
-# $(patsubst %.cpp,%.o,$(SRCS)): substitute all ".cpp" file name strings to ".o" file name strings
+
 OBJS := $(patsubst %.cpp,%.o,$(SRCS))
 
 CUDAOBJECTS 	= $(CUDASOURCES:.cu=.ptx)
