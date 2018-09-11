@@ -33,6 +33,8 @@ private:
 protected:
   bool initialized_ = false;
 
+  DataConstancy data_constancy_;
+
   OpticalFlowBase2D(const char* name);
 
   size_t GetMaxWarpLevel(size_t width, size_t height, float scale_factor) const;
@@ -42,7 +44,7 @@ protected:
 public:
   const char* GetName() const;
 
-  virtual bool Initialize(const DataSize3& data_size) = 0;
+  virtual bool Initialize(const DataSize3& data_size, DataConstancy data_constancy = DataConstancy::Grey) = 0;
   virtual void ComputeFlow(Data2D& frame_0, Data2D& frame_1, Data2D& flow_u, Data2D& flow_v, OperationParameters& params);
   virtual void Destroy();
 

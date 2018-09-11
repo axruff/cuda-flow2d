@@ -372,3 +372,205 @@ extern "C" __global__ void solve_2d(
 
   }
 }
+
+extern "C" __global__ void solve_2d_log(
+    const float* frame_0,
+    const float* frame_1,
+    const float* flow_u,
+    const float* flow_v,
+    const float* flow_du,
+    const float* flow_dv,
+    const float* phi,
+    const float* ksi,
+    size_t width,
+    size_t height,
+    float  hx,
+    float  hy,
+    float  equation_alpha,
+    float* temp_du,
+    float* temp_dv)
+{
+    dim3 shared_block_size(
+        blockDim.x + 2,
+        blockDim.y + 2);
+
+    float* shared_frame_0 = &shared[0 * shared_block_size.x * shared_block_size.y];
+    float* shared_frame_1 = &shared[1 * shared_block_size.x * shared_block_size.y];
+    float* shared_flow_u  = &shared[2 * shared_block_size.x * shared_block_size.y];
+    float* shared_flow_v  = &shared[3 * shared_block_size.x * shared_block_size.y];
+    float* shared_flow_du = &shared[4 * shared_block_size.x * shared_block_size.y];
+    float* shared_flow_dv = &shared[5 * shared_block_size.x * shared_block_size.y];
+    float* shared_phi     = &shared[6 * shared_block_size.x * shared_block_size.y];
+    float* shared_ksi     = &shared[7 * shared_block_size.x * shared_block_size.y];
+
+    float* shared_fx      = &shared[8 * shared_block_size.x * shared_block_size.y];
+    float* shared_fy      = &shared[9 * shared_block_size.x * shared_block_size.y];
+    float* shared_ft      = &shared[10 * shared_block_size.x * shared_block_size.y];
+
+
+
+
+    dim3 global_id(
+        blockDim.x * blockIdx.x + threadIdx.x,
+        blockDim.y * blockIdx.y + threadIdx.y);
+
+    /* Load the main area of datasets */
+    size_t global_x = global_id.x < width ? global_id.x : 2 * width - global_id.x - 2;
+    size_t global_y = global_id.y < height ? global_id.y : 2 * height - global_id.y - 2;
+    {
+        shared_frame_0[SIND(threadIdx.x, threadIdx.y)] = frame_0[IND(global_x, global_y)];
+        shared_frame_1[SIND(threadIdx.x, threadIdx.y)] = frame_1[IND(global_x, global_y)];
+        shared_flow_u[SIND(threadIdx.x, threadIdx.y)] = flow_u[IND(global_x, global_y)];
+        shared_flow_v[SIND(threadIdx.x, threadIdx.y)] = flow_v[IND(global_x, global_y)];
+        shared_flow_du[SIND(threadIdx.x, threadIdx.y)] = flow_du[IND(global_x, global_y)];
+        shared_flow_dv[SIND(threadIdx.x, threadIdx.y)] = flow_dv[IND(global_x, global_y)];
+        shared_phi[SIND(threadIdx.x, threadIdx.y)] =     phi[IND(global_x, global_y)];
+        shared_ksi[SIND(threadIdx.x, threadIdx.y)] =     ksi[IND(global_x, global_y)];
+    }
+
+    /* Load the left slice */
+    if (threadIdx.x == 0) {
+        int offset = global_x - 1;
+        size_t global_x_l = offset >= 0 ? offset : -offset;
+        shared_frame_0[SIND(threadIdx.x - 1, threadIdx.y)] = frame_0[IND(global_x_l, global_y)];
+        shared_frame_1[SIND(threadIdx.x - 1, threadIdx.y)] = frame_1[IND(global_x_l, global_y)];
+        shared_flow_u[SIND(threadIdx.x - 1, threadIdx.y)] = flow_u[IND(global_x_l, global_y)];
+        shared_flow_v[SIND(threadIdx.x - 1, threadIdx.y)] = flow_v[IND(global_x_l, global_y)];
+        shared_flow_du[SIND(threadIdx.x - 1, threadIdx.y)] = flow_du[IND(global_x_l, global_y)];
+        shared_flow_dv[SIND(threadIdx.x - 1, threadIdx.y)] = flow_dv[IND(global_x_l, global_y)];
+        shared_phi[SIND(threadIdx.x - 1, threadIdx.y)] =     phi[IND(global_x_l, global_y)];
+        shared_ksi[SIND(threadIdx.x - 1, threadIdx.y)] =     ksi[IND(global_x_l, global_y)];
+    }
+
+    /* Load the right slice */
+    if (threadIdx.x == blockDim.x - 1) {
+        int offset = global_x + 1;
+        size_t global_x_r = offset < width ? offset : 2 * width - offset - 2;
+        shared_frame_0[SIND(threadIdx.x + 1, threadIdx.y)] = frame_0[IND(global_x_r, global_y)];
+        shared_frame_1[SIND(threadIdx.x + 1, threadIdx.y)] = frame_1[IND(global_x_r, global_y)];
+        shared_flow_u[SIND(threadIdx.x + 1, threadIdx.y)] = flow_u[IND(global_x_r, global_y)];
+        shared_flow_v[SIND(threadIdx.x + 1, threadIdx.y)] = flow_v[IND(global_x_r, global_y)];
+        shared_flow_du[SIND(threadIdx.x + 1, threadIdx.y)] = flow_du[IND(global_x_r, global_y)];
+        shared_flow_dv[SIND(threadIdx.x + 1, threadIdx.y)] = flow_dv[IND(global_x_r, global_y)];
+        shared_phi[SIND(threadIdx.x + 1, threadIdx.y)] =     phi[IND(global_x_r, global_y)];
+        shared_ksi[SIND(threadIdx.x + 1, threadIdx.y)] =     ksi[IND(global_x_r, global_y)];
+    }
+
+    /* Load the upper slice */
+    if (threadIdx.y == 0) {
+        int offset = global_y - 1;
+        size_t global_y_u = offset > 0 ? offset : -offset;
+        shared_frame_0[SIND(threadIdx.x, threadIdx.y - 1)] = frame_0[IND(global_x, global_y_u)];
+        shared_frame_1[SIND(threadIdx.x, threadIdx.y - 1)] = frame_1[IND(global_x, global_y_u)];
+        shared_flow_u[SIND(threadIdx.x, threadIdx.y - 1)] = flow_u[IND(global_x, global_y_u)];
+        shared_flow_v[SIND(threadIdx.x, threadIdx.y - 1)] = flow_v[IND(global_x, global_y_u)];
+        shared_flow_du[SIND(threadIdx.x, threadIdx.y - 1)] = flow_du[IND(global_x, global_y_u)];
+        shared_flow_dv[SIND(threadIdx.x, threadIdx.y - 1)] = flow_dv[IND(global_x, global_y_u)];
+        shared_phi[SIND(threadIdx.x, threadIdx.y - 1)] =     phi[IND(global_x, global_y_u)];
+        shared_ksi[SIND(threadIdx.x, threadIdx.y - 1)] =     ksi[IND(global_x, global_y_u)];
+    }
+
+    /* Load the bottom slice */
+    if (threadIdx.y == blockDim.y - 1) {
+        int offset = global_y + 1;
+        size_t global_y_b = offset < height ? offset : 2 * height - offset - 2;
+        shared_frame_0[SIND(threadIdx.x, threadIdx.y + 1)] = frame_0[IND(global_x, global_y_b)];
+        shared_frame_1[SIND(threadIdx.x, threadIdx.y + 1)] = frame_1[IND(global_x, global_y_b)];
+        shared_flow_u[SIND(threadIdx.x, threadIdx.y + 1)] = flow_u[IND(global_x, global_y_b)];
+        shared_flow_v[SIND(threadIdx.x, threadIdx.y + 1)] = flow_v[IND(global_x, global_y_b)];
+        shared_flow_du[SIND(threadIdx.x, threadIdx.y + 1)] = flow_du[IND(global_x, global_y_b)];
+        shared_flow_dv[SIND(threadIdx.x, threadIdx.y + 1)] = flow_dv[IND(global_x, global_y_b)];
+        shared_phi[SIND(threadIdx.x, threadIdx.y + 1)] =     phi[IND(global_x, global_y_b)];
+        shared_ksi[SIND(threadIdx.x, threadIdx.y + 1)] =     ksi[IND(global_x, global_y_b)];
+    }
+
+
+    __syncthreads();
+
+    if (global_id.x < width && global_id.y < height) {
+        /* Compute derivatives */
+
+        shared_fx[SIND(threadIdx.x, threadIdx.y)] =
+            (log(shared_frame_0[SIND(threadIdx.x + 1, threadIdx.y)]+1.0f) - log(shared_frame_0[SIND(threadIdx.x - 1, threadIdx.y)]+1.0f) +
+            log(shared_frame_1[SIND(threadIdx.x + 1, threadIdx.y)]+1.0f) - log(shared_frame_1[SIND(threadIdx.x - 1, threadIdx.y)]+1.0f)) /
+            (4.f * hx);
+        shared_fy[SIND(threadIdx.x, threadIdx.y)] =
+            (log(shared_frame_0[SIND(threadIdx.x, threadIdx.y + 1)]+1.0f) - log(shared_frame_0[SIND(threadIdx.x, threadIdx.y - 1)]+1.0f) +
+            log(shared_frame_1[SIND(threadIdx.x, threadIdx.y + 1)]+1.0f) - log(shared_frame_1[SIND(threadIdx.x, threadIdx.y - 1)]+1.0f)) /
+            (4.f * hy);
+
+        shared_ft[SIND(threadIdx.x, threadIdx.y)] =
+            log(shared_frame_1[SIND(threadIdx.x, threadIdx.y)]+1.0f) - log(shared_frame_0[SIND(threadIdx.x, threadIdx.y)]+1.0f);
+    }
+
+    __syncthreads();
+
+
+    if (global_id.x < width && global_id.y < height) {
+
+        /* define time saver variables */
+        float hx_1 = 1.0 / (2.0*hx);
+        float hy_1 = 1.0 / (2.0*hy);
+
+
+        float fxx = (shared_fx[SIND(threadIdx.x+1, threadIdx.y  )] - shared_fx[SIND(threadIdx.x-1, threadIdx.y  )]) / hx_1;
+        float fxy = (shared_fx[SIND(threadIdx.x  , threadIdx.y+1)] - shared_fx[SIND(threadIdx.x  , threadIdx.y-1)]) / hy_1;
+        float fyy = (shared_fy[SIND(threadIdx.x  , threadIdx.y+1)] - shared_fy[SIND(threadIdx.x  , threadIdx.y-1)]) / hy_1;
+        float fxt = (shared_ft[SIND(threadIdx.x+1, threadIdx.y  )] - shared_ft[SIND(threadIdx.x-1, threadIdx.y  )]) / hx_1;
+        float fyt = (shared_ft[SIND(threadIdx.x  , threadIdx.y+1)] - shared_ft[SIND(threadIdx.x  , threadIdx.y-1)]) / hy_1;
+
+
+        float J11 = fxx*fxx + fxy*fxy;
+        float J22 = fxy*fxy + fyy*fyy;
+        float J33 = fxt*fxt + fyt*fyt;
+        float J12 = fxx*fxy + fxy*fyy;
+        float J13 = fxx*fxt + fxy*fyt;
+        float J23 = fxy*fxt + fyy*fyt;
+
+
+        /* Compute weights */
+        float hx_2 = equation_alpha / (hx * hx);
+        float hy_2 = equation_alpha / (hy * hy);
+
+
+        float xp = (global_id.x < width - 1)  * hx_2;
+        float xm = (global_id.x > 0)          * hx_2;
+        float yp = (global_id.y < height - 1) * hy_2;
+        float ym = (global_id.y > 0)          * hy_2;
+
+
+        float phi_xp = (shared_phi[SIND(threadIdx.x + 1, threadIdx.y)] + shared_phi[SIND(threadIdx.x, threadIdx.y)]) / 2.f;
+        float phi_xm = (shared_phi[SIND(threadIdx.x - 1, threadIdx.y)] + shared_phi[SIND(threadIdx.x, threadIdx.y)]) / 2.f;
+        float phi_yp = (shared_phi[SIND(threadIdx.x, threadIdx.y + 1)] + shared_phi[SIND(threadIdx.x, threadIdx.y)]) / 2.f;
+        float phi_ym = (shared_phi[SIND(threadIdx.x, threadIdx.y - 1)] + shared_phi[SIND(threadIdx.x, threadIdx.y)]) / 2.f;
+
+
+        float sumH = (xp*phi_xp + xm*phi_xm + yp*phi_yp + ym*phi_ym);
+        float sumU =
+            phi_xp * xp * (shared_flow_u[SIND(threadIdx.x + 1, threadIdx.y)] + shared_flow_du[SIND(threadIdx.x + 1, threadIdx.y)] - shared_flow_u[SIND(threadIdx.x, threadIdx.y)]) +
+            phi_xm * xm * (shared_flow_u[SIND(threadIdx.x - 1, threadIdx.y)] + shared_flow_du[SIND(threadIdx.x - 1, threadIdx.y)] - shared_flow_u[SIND(threadIdx.x, threadIdx.y)]) +
+            phi_yp * yp * (shared_flow_u[SIND(threadIdx.x, threadIdx.y + 1)] + shared_flow_du[SIND(threadIdx.x, threadIdx.y + 1)] - shared_flow_u[SIND(threadIdx.x, threadIdx.y)]) +
+            phi_ym * ym * (shared_flow_u[SIND(threadIdx.x, threadIdx.y - 1)] + shared_flow_du[SIND(threadIdx.x, threadIdx.y - 1)] - shared_flow_u[SIND(threadIdx.x, threadIdx.y)]);
+        float sumV =
+            phi_xp * xp * (shared_flow_v[SIND(threadIdx.x + 1, threadIdx.y)] + shared_flow_dv[SIND(threadIdx.x + 1, threadIdx.y)] - shared_flow_v[SIND(threadIdx.x, threadIdx.y)]) +
+            phi_xm * xm * (shared_flow_v[SIND(threadIdx.x - 1, threadIdx.y)] + shared_flow_dv[SIND(threadIdx.x - 1, threadIdx.y)] - shared_flow_v[SIND(threadIdx.x, threadIdx.y)]) +
+            phi_yp * yp * (shared_flow_v[SIND(threadIdx.x, threadIdx.y + 1)] + shared_flow_dv[SIND(threadIdx.x, threadIdx.y + 1)] - shared_flow_v[SIND(threadIdx.x, threadIdx.y)]) +
+            phi_ym * ym * (shared_flow_v[SIND(threadIdx.x, threadIdx.y - 1)] + shared_flow_dv[SIND(threadIdx.x, threadIdx.y - 1)] - shared_flow_v[SIND(threadIdx.x, threadIdx.y)]);
+
+        float result_du =
+            (shared_ksi[SIND(threadIdx.x, threadIdx.y)] * (-J13 - J12 * shared_flow_dv[SIND(threadIdx.x, threadIdx.y)]) + sumU) /
+            (shared_ksi[SIND(threadIdx.x, threadIdx.y)] * J11 + sumH);
+
+        float result_dv =
+            (shared_ksi[SIND(threadIdx.x, threadIdx.y)] * (-J23 - J12 * result_du) + sumV) /
+            (shared_ksi[SIND(threadIdx.x, threadIdx.y)] * J22 + sumH);
+
+        //float result_dv =
+        //    (shared_ksi[SIND(threadIdx.x, threadIdx.y)] * (-J23 - J12 * shared_flow_du[SIND(threadIdx.x, threadIdx.y)]) + sumV) /
+        //    (shared_ksi[SIND(threadIdx.x, threadIdx.y)] * J22 + sumH);
+
+        temp_du[IND(global_id.x, global_id.y)] = result_du;
+        temp_dv[IND(global_id.x, global_id.y)] = result_dv;
+
+    }
+}

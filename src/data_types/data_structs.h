@@ -22,6 +22,12 @@
 #ifndef GPUFLOW3D_DATA_TYPES_DATA_STRUCTS_H_
 #define GPUFLOW3D_DATA_TYPES_DATA_STRUCTS_H_
 
+enum class Methods { OpticalFlow, Correlation };
+
+enum class DataConstancy { Grey, LogDerivatives };
+
+
+
 struct DataSize3 {
     size_t width;
     size_t height;

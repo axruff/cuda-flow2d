@@ -76,7 +76,7 @@ int Settings::LoadSettings(string fileName)
 
 	
 	pElem=hDoc.FirstChildElement().Element();
-	// should always have a valid root but handle gracefully if it does
+
 	if (!pElem) {
 		cout<<"Problem with parsing settings file: "<<fileName<<endl;
 		return -1;

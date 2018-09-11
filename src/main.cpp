@@ -26,11 +26,6 @@
 
 #include <cuda.h>
 
-#include "src/optical_flow/optical_flow_2d.h"
-
-#include "src/correlation/correlation_flow_2d.h"
-//#include "test_correlation.h"
-
 #include "src/data_types/data2d.h"
 #include "src/data_types/data_structs.h"
 #include "src/data_types/operation_parameters.h"
@@ -38,7 +33,15 @@
 #include "src/utils/io_utils.h"
 #include "src/utils/settings.h"
 
+#include "src/optical_flow/optical_flow_2d.h"
+#include "src/correlation/correlation_flow_2d.h"
+
 using namespace OpticFlow;
+
+
+const bool key_press = true;
+const bool use_visualization = false;
+const bool silent_mode = true;
 
 
 int main(int argc, char** argv)
@@ -58,12 +61,10 @@ int main(int argc, char** argv)
         std::printf("//        2D Correlation flow (Test) using NVIDIA CUDA. Version 0.5	   \n");
         std::printf("//                                                                        \n");
         std::printf("//           Author: Alexey Ershov. <ershov.alexey@gmail.com>             \n");
-        std::printf("//            Karlsruhe Institute of Technology. 2009 - 2018              \n");
+        std::printf("//            Karlsruhe Institute of Technology. 2018                     \n");
         std::printf("//----------------------------------------------------------------------//\n");
 
-        const bool key_press = true;
-        const bool use_visualization = false;
-        const bool silent_mode = true;
+       
 
         const size_t width = 128;
         const size_t height = 128;
@@ -151,9 +152,6 @@ int main(int argc, char** argv)
     std::printf("//            Karlsruhe Institute of Technology. 2015 - 2018            //\n");
     std::printf("//----------------------------------------------------------------------//\n");
 
-  const bool key_press = true;
-  const bool use_visualization = false;
-  const bool silent_mode = true;
 
 
   /* Dataset variables */
@@ -237,7 +235,7 @@ int main(int argc, char** argv)
   }
 
 
-  if (optical_flow.Initialize(data_size)) {
+  if (optical_flow.Initialize(data_size, DataConstancy::Grey)) {
 
     Data2D flow_u(data_size.width, data_size.height);
     Data2D flow_v(data_size.width, data_size.height);

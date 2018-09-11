@@ -23,6 +23,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 #include <vector_types.h>
 
 #include "src/data_types/data_structs.h"
@@ -45,7 +46,10 @@ bool CudaOperationSolve2D::Initialize(const OperationParameters* params)
   }
 
   DataSize3 container_size;
+  DataConstancy data_constancy;
+
   GET_PARAM_OR_RETURN_VALUE(*params, DataSize3, container_size, "container_size", initialized_);
+  GET_PARAM_OR_RETURN_VALUE(*params, DataConstancy, data_constancy, "data_constancy", initialized_);
  
   dev_container_size_ = container_size;
 
@@ -54,8 +58,26 @@ bool CudaOperationSolve2D::Initialize(const OperationParameters* params)
   std::strcat(exec_path, "/kernels/solve_2d.ptx");
 
   if (!CheckCudaError(cuModuleLoad(&cu_module_, exec_path))) {
+
+      std::string solve_function_name;
+
+      switch (data_constancy)
+      {
+       Grey:
+            solve_function_name = "solve_2d";
+            break;
+
+       LogDerivatives:
+            solve_function_name = "solve_2d_log";
+            break;
+        
+      default:
+          solve_function_name = "solve_2d";
+          break;
+      }
+
     if (!CheckCudaError(cuModuleGetFunction(&cuf_compute_phi_ksi_, cu_module_, "compute_phi_ksi")) &&
-        !CheckCudaError(cuModuleGetFunction(&cuf_solve_, cu_module_, "solve_2d"))
+        !CheckCudaError(cuModuleGetFunction(&cuf_solve_, cu_module_, solve_function_name.c_str()))
         ) {
       size_t const_size;
 

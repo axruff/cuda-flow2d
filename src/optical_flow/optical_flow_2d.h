@@ -59,7 +59,7 @@ private:
 public:
     OpticalFlow2D();
 
-  bool Initialize(const DataSize3& data_size) override;
+    bool Initialize(const DataSize3& data_size, DataConstancy data_constancy = DataConstancy::Grey) override;
   void ComputeFlow(Data2D& frame_0, Data2D& frame_1, Data2D& flow_u, Data2D& flow_v, OperationParameters& params) override;
   void Destroy() override;
 

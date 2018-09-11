@@ -30,6 +30,7 @@
 //#include "../viewflow3d/src/visualization.h"
 #include "src/utils/common_utils.h"
 #include "src/utils/cuda_utils.h"
+#include "src/data_types/data_structs.h"
 
 using namespace std;
 
@@ -43,8 +44,9 @@ OpticalFlow2D::OpticalFlow2D()
   cuda_operations_.push_front(&cuop_solve_);
 }
 
-bool OpticalFlow2D::Initialize(const DataSize3& data_size)
+bool OpticalFlow2D::Initialize(const DataSize3& data_size, DataConstancy data_constancy)
 {
+  data_constancy_ = data_constancy;
   dev_container_size_ = data_size;
   dev_container_size_.pitch = 0;
 
@@ -63,6 +65,7 @@ bool OpticalFlow2D::InitCudaOperations()
 
   OperationParameters op;
   op.PushValuePtr("container_size", &dev_container_size_);
+  op.PushValuePtr("data_constancy", &data_constancy_);
 
   for (CudaOperationBase* cuop : cuda_operations_) {
     std::printf("%-18s: ", cuop->GetName());
