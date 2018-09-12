@@ -30,6 +30,7 @@
 #include "src/cuda_operations/cuda_operation_base.h"
 #include "src/cuda_operations/2d/cuda_operation_add_2d.h"
 #include "src/cuda_operations/2d/cuda_operation_median_2d.h"
+#include "src/cuda_operations/2d/cuda_operation_convolution_2d.h"
 #include "src/cuda_operations/2d/cuda_operation_registration_2d.h"
 #include "src/cuda_operations/2d/cuda_operation_resample_2d.h"
 #include "src/cuda_operations/2d/cuda_operation_solve_2d.h"
@@ -48,6 +49,7 @@ private:
   std::stack<CUdeviceptr> cuda_memory_ptrs_;
 
   CudaOperationAdd2D cuop_add_;
+  CudaOperationConvolution2D cuop_convolution_;
   CudaOperationMedian2D cuop_median_;
   CudaOperationRegistration2D cuop_register_;
   CudaOperationResample2D cuop_resample_;
