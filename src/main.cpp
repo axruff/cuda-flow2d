@@ -155,8 +155,8 @@ int main(int argc, char** argv)
 
 
   /* Dataset variables */
-  const size_t width = 584;
-  const size_t height = 388;
+    const size_t width = 584; //584;
+    const size_t height = 388; ////388;
 
 
   /* Optical flow variables */
@@ -164,11 +164,13 @@ int main(int argc, char** argv)
   float   warp_scale_factor       = 0.9f;
   size_t  outer_iterations_count  = 40;
   size_t  inner_iterations_count  = 5;
-  float   equation_alpha          = 3.5f;
+  float   equation_alpha          = 3.5f; // 3.5f;
   float   equation_smoothness     = 0.001f;
   float   equation_data           = 0.001f;
   size_t  median_radius           = 5;
-  float   gaussian_sigma          = 2.5f;
+  float   gaussian_sigma          = 0.75f;
+
+  DataConstancy data_constancy    = DataConstancy::Grey;
 
   string  file_name1              = "rub1.raw";
   string  file_name2              = "rub2.raw";
@@ -232,10 +234,14 @@ int main(int argc, char** argv)
   if (!frame_0.ReadRAWFromFileU8("./data/rub1.raw", data_size.width, data_size.height) ||
       !frame_1.ReadRAWFromFileU8("./data/rub2.raw", data_size.width, data_size.height)) {
       return 2;
-  }
+ } 
 
+  //if (!frame_0.ReadRAWFromFileU8("./data/01_sim_spray-128-128.raw", data_size.width, data_size.height) ||
+  //    !frame_1.ReadRAWFromFileU8("./data/02_sim_spray-128-128.raw", data_size.width, data_size.height)) {
+  //    return 2;
+  //}
 
-  if (optical_flow.Initialize(data_size, DataConstancy::Grey)) {
+  if (optical_flow.Initialize(data_size, data_constancy)) {
 
     Data2D flow_u(data_size.width, data_size.height);
     Data2D flow_v(data_size.width, data_size.height);
