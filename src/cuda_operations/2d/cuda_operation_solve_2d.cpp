@@ -46,7 +46,7 @@ bool CudaOperationSolve2D::Initialize(const OperationParameters* params)
   }
 
   DataSize3 container_size;
-  DataConstancy data_constancy;
+  DataConstancy data_constancy = DataConstancy::LogDerivatives;
 
   GET_PARAM_OR_RETURN_VALUE(*params, DataSize3, container_size, "container_size", initialized_);
   GET_PARAM_OR_RETURN_VALUE(*params, DataConstancy, data_constancy, "data_constancy", initialized_);
@@ -61,13 +61,18 @@ bool CudaOperationSolve2D::Initialize(const OperationParameters* params)
 
       std::string solve_function_name;
 
+
       switch (data_constancy)
       {
-       Grey:
+      case DataConstancy::Grey:
             solve_function_name = "solve_2d";
             break;
 
-       LogDerivatives:
+      case DataConstancy::Gradient:
+          solve_function_name = "solve_2d_grad";
+          break;
+
+      case DataConstancy::LogDerivatives:
             solve_function_name = "solve_2d_log";
             break;
         
@@ -169,6 +174,31 @@ void CudaOperationSolve2D::Execute(OperationParameters& params)
     (block_dim.x + 2) * (block_dim.y + 2) * sizeof(float) * number_shared_blocks;
 
   int number_shared_blocks_solve = 8;
+
+  DataConstancy data_constancy;
+  GET_PARAM_OR_RETURN(params, DataConstancy, data_constancy, "data_constancy");
+
+  switch (data_constancy)
+  {
+  case DataConstancy::Grey:
+      number_shared_blocks_solve = 8;
+      break;
+
+  case DataConstancy::Gradient:
+      number_shared_blocks_solve = 11;
+      break;
+
+  case DataConstancy::LogDerivatives:
+      number_shared_blocks_solve = 11;
+      break;
+
+  default:
+      number_shared_blocks_solve = 8;
+      break;
+  }
+
+
+
   int needed_shared_memory_size_solve =
     (block_dim.x + 2) * (block_dim.y + 2) * sizeof(float) * number_shared_blocks_solve;
 

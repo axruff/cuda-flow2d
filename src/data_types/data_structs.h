@@ -24,7 +24,7 @@
 
 enum class Methods { OpticalFlow, Correlation };
 
-enum class DataConstancy { Grey, LogDerivatives };
+enum class DataConstancy { Grey, Gradient, LogDerivatives };
 
 
 
