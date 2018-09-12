@@ -28,8 +28,6 @@
 
 #include "src/data_types/data_structs.h"
 
-//#define IND(X, Y, Z) (((Z) * container_size.height + (Y)) * (container_size.pitch / sizeof(float)) + (X)) 
-//#define SIND(X, Y, Z) ((((Z) + radius_2) * shared_block_size.y + ((Y) + radius_2)) * shared_block_size.x + ((X) + radius_2))
 
 #define IND(X, Y) ((Y) * (container_size.pitch / sizeof(float)) + (X)) 
 #define SIND(X, Y) ((((Y) + radius_2)) * shared_block_size.x + ((X) + radius_2))
@@ -39,7 +37,7 @@ __constant__ DataSize3 container_size;
 
 extern __shared__ float shared[];
 
-__device__ void sort(float* buffer, size_t length)
+__device__ void bubbleSort(float* buffer, size_t length)
 {
   for (int i = 0; i < length - 1; i++) {
     for (int k = 0; k < length - i - 1; k++) {
@@ -51,6 +49,39 @@ __device__ void sort(float* buffer, size_t length)
     }
   }
 }
+
+__device__ void insertionSort(float* window, size_t size)
+{
+    int i, j;
+    float temp;
+    for (i = 0; i < size; i++) {
+        temp = window[i];
+        for (j = i-1; j >= 0 && temp < window[j]; j--) {
+            window[j+1] = window[j];
+        }
+        window[j+1] = temp;
+    }
+}
+
+// \test Experimental. Shows worse performance. TODO: Clarify
+__device__ void partialSelection(float* window, size_t size)
+{
+    for (unsigned int j=0; j<(size*size+1)/2; ++j)
+    {
+        // Find position of minimum element
+        int min_index=j;
+        for (unsigned int l=j+1; l<size*size; ++l)
+        if (window[l] < window[min_index])
+            min_index=l;
+
+        // Put found minimum element in its place
+        const unsigned char temp=window[j];
+        window[j]=window[min_index];
+        window[min_index]=temp;
+    }
+}
+
+
 
 /* See a note about the thread block size in cuda_operation_median.cpp file.*/
 extern "C" __global__ void median_2d(
@@ -202,68 +233,42 @@ extern "C" __global__ void median_2d(
     //}
   }
 
-  /* 8 corners */
+  /* 4 corners */
   {
-    //int global_x_c;
-    //int global_y_c;
-    //int global_z_c;
+    int global_x_c;
+    int global_y_c;
 
-    //if (threadIdx.x < radius_2 && threadIdx.y < radius_2 && threadIdx.z < radius_2) {
-    //  /* Front upper left */
-    //  global_x_c = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
-    //  global_x_c = global_x_c > 0 ? global_x_c : -global_x_c;
-    //  
-    //  global_y_c = blockDim.y * blockIdx.y - radius_2 + threadIdx.y;
-    //  global_y_c = global_y_c > 0 ? global_y_c : -global_y_c;
-    //  
-    //  global_z_c = blockDim.z * blockIdx.z - radius_2 + threadIdx.z;
-    //  global_z_c = global_z_c > 0 ? global_z_c : -global_z_c;
+    if (threadIdx.x < radius_2 && threadIdx.y < radius_2) {
+ 
+        global_x_c = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
+        global_x_c = global_x_c > 0 ? global_x_c : -global_x_c;
 
-    //  shared[SIND(threadIdx.x - radius_2,threadIdx.y - radius_2,threadIdx.z -radius_2)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
+        global_y_c = blockDim.y * blockIdx.y - radius_2 + threadIdx.y;
+        global_y_c = global_y_c > 0 ? global_y_c : -global_y_c;
 
-    //  /* Front upper right */
-    //  global_x_c = blockDim.x *(blockIdx.x + 1) + threadIdx.x;
-    //  global_x_c = global_x_c < width ? global_x_c : 2 * width - global_x_c - 2;
-    //  shared[SIND(blockDim.x + threadIdx.x, threadIdx.y - radius_2, threadIdx.z - radius_2)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
+      /* Front upper left */
+      shared[SIND(threadIdx.x - radius_2,threadIdx.y - radius_2)] =
+        input[IND(global_x_c, global_y_c)];
 
-    //  /* Front bottom right */
-    //  global_y_c = blockDim.y *(blockIdx.y + 1) + threadIdx.y;
-    //  global_y_c = global_y_c < height ? global_y_c : 2 * height - global_y_c - 2;
-    //  shared[SIND(blockDim.x + threadIdx.x, blockDim.y + threadIdx.y, threadIdx.z - radius_2)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
+      /* Front upper right */
+      global_x_c = blockDim.x *(blockIdx.x + 1) + threadIdx.x;
+      global_x_c = global_x_c < width ? global_x_c : 2 * width - global_x_c - 2;
+      shared[SIND(blockDim.x + threadIdx.x, threadIdx.y - radius_2)] =
+        input[IND(global_x_c, global_y_c)];
 
-    //  /* Front bottom left */
-    //  global_x_c = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
-    //  global_x_c = global_x_c > 0 ? global_x_c : -global_x_c;
-    //  shared[SIND(threadIdx.x - radius_2, blockDim.y + threadIdx.y, threadIdx.z - radius_2)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
+      /* Front bottom right */
+      global_y_c = blockDim.y *(blockIdx.y + 1) + threadIdx.y;
+      global_y_c = global_y_c < height ? global_y_c : 2 * height - global_y_c - 2;
+      shared[SIND(blockDim.x + threadIdx.x, blockDim.y + threadIdx.y)] =
+        input[IND(global_x_c, global_y_c)];
 
-    //  /* Rear bottom left */
-    //  global_z_c = blockDim.z *(blockIdx.z + 1) + threadIdx.z;
-    //  global_z_c = global_z_c < depth ? global_z_c : 2 * depth - global_z_c - 2;
-    //  shared[SIND(threadIdx.x - radius_2, blockDim.y + threadIdx.y, blockDim.z + threadIdx.z)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
+      /* Front bottom left */
+      global_x_c = blockDim.x * blockIdx.x - radius_2 + threadIdx.x;
+      global_x_c = global_x_c > 0 ? global_x_c : -global_x_c;
+      shared[SIND(threadIdx.x - radius_2, blockDim.y + threadIdx.y)] =
+        input[IND(global_x_c, global_y_c)];
 
-    //  /* Rear upper left */
-    //  global_y_c = blockDim.y * blockIdx.y - radius_2 + threadIdx.y;
-    //  global_y_c = global_y_c > 0 ? global_y_c : -global_y_c;
-    //  shared[SIND(threadIdx.x - radius_2, threadIdx.y - radius_2, blockDim.z + threadIdx.z)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
-
-    //  /* Rear upper right */
-    //  global_x_c = blockDim.x *(blockIdx.x + 1) + threadIdx.x;
-    //  global_x_c = global_x_c < width ? global_x_c : 2 * width - global_x_c - 2;
-    //  shared[SIND(blockDim.x + threadIdx.x, threadIdx.y - radius_2, blockDim.z + threadIdx.z)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
-
-    //  /* Rear bottom right */
-    //  global_y_c = blockDim.y *(blockIdx.y + 1) + threadIdx.y;
-    //  global_y_c = global_y_c < height ? global_y_c : 2 * height - global_y_c - 2;
-    //  shared[SIND(blockDim.x + threadIdx.x, blockDim.y + threadIdx.y, blockDim.z + threadIdx.z)] =
-    //    input[IND(global_x_c, global_y_c, global_z_c)];
-    //}
+    }
   }
 
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< //
@@ -273,7 +278,7 @@ extern "C" __global__ void median_2d(
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< //
 
   if (global_id.x < width && global_id.y < height) {
-    float buffer[49]; /* Max supported radius is 7, we have to store 7*7*7 values. */
+    float buffer[49]; /* Max supported radius is 7, we have to store 7*7 values. */
       for (size_t iy = 0; iy < radius; ++iy) {
         for (size_t ix = 0; ix < radius; ++ix) {
           size_t lx = threadIdx.x - ix + radius_2;
@@ -284,7 +289,10 @@ extern "C" __global__ void median_2d(
     
 
     size_t length = radius * radius;
-    sort(buffer, length);
+
+    //bubbleSort(buffer, length);
+    insertionSort(buffer, length);
+    //partialSelection(buffer, radius);
 
     output[IND(global_id.x, global_id.y)] = buffer[length / 2];
   }

@@ -135,7 +135,7 @@ void CudaOperationMedian2D::Execute(OperationParameters& params)
     }
 
     
-    void* args[6] = { 
+    void* args[5] = { 
       &dev_input,
       &data_size.width,
       &data_size.height,
