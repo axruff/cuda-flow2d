@@ -92,19 +92,22 @@ int Settings::LoadSettings(string fileName)
 
 	pElem=hRoot.FirstChild( "Input" ).FirstChild("Path").Element();
 	this->inputPath = pElem->Attribute("inputPath");
-
 	pElem=hRoot.FirstChild( "Output").FirstChild("Path").Element();
 	this->outputPath = pElem->Attribute("outputPath");
 
-	
 	this->fileName1 = hRoot.FirstChild( "Input" ).FirstChild("Mode").FirstChild("Files").Element()->Attribute("file1");
 	this->fileName2 = hRoot.FirstChild( "Input" ).FirstChild("Mode").FirstChild("Files").Element()->Attribute("file2");
 	
-
 	hRoot.FirstChild( "Parameters" ).FirstChild("Method").Element()->QueryIntAttribute("key", &value);
 	this->press_key = value;
 
-	hRoot.FirstChild( "Parameters" ).FirstChild("Scheme").FirstChild("Presmooth").Element()->QueryFloatAttribute("sigma", &dbValue);
+	hRoot.FirstChild( "Input" ).FirstChild("Mode").Element()->QueryIntAttribute("Nx", &value);
+	this->width = value;
+	
+	hRoot.FirstChild( "Input" ).FirstChild("Mode").Element()->QueryIntAttribute("Ny", &value);
+	this->height = value;
+	
+	hRoot.FirstChild( "Parameters" ).FirstChild("Solver").FirstChild("Model").Element()->QueryFloatAttribute("sigma", &dbValue);
 	this->sigma = dbValue;
 
 
@@ -134,9 +137,6 @@ int Settings::LoadSettings(string fileName)
 	this->e_data= dbValue;
 
 
-
-
-	
 
 	return 0;
 

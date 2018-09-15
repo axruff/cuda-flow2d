@@ -47,6 +47,8 @@ namespace OpticFlow {
 		string fileName2;
 
 		// General
+		int width;
+		int height;
 		float sigma;
 		float precision;
 		int medianRadius;
