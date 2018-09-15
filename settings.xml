@@ -3,16 +3,15 @@
 <OpticalFlow>
   
   <Input>
-    <Path inputPath="e:\Data\original\rub\"/>
+    <Path inputPath="/users/opid19/dev/flow/data/"/>
     
-    <Mode Nx="584" Ny="388" imageType="8-bit">
-      
-    <Files file1 ="rub1.pgm" file2 ="rub2.pgm"/>
+    <Mode Nx="400" Ny="250" imageType="8-bit">
+    	<Files file1 ="frame1.raw" file2 ="frame2.raw"/>
     </Mode>
   </Input>
 
   <Parameters>
-    <Method mode ="2d" run="flow" key="1" />
+    <Method mode ="2d" run="flow" key="0" />
 
     <Solver>
       <Iterations inner="5" outer="20"/>
@@ -23,6 +22,6 @@
   </Parameters>
 
   <Output>
-    <Path outputPath="e:\Data\test\"/>
+    <Path outputPath="/users/opid19/dev/flow/data/output/"/>
   </Output>
 </OpticalFlow>
