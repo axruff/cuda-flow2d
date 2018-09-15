@@ -39,7 +39,7 @@
 using namespace OpticFlow;
 
 
-const bool key_press = true;
+const bool key_press = false;
 const bool use_visualization = false;
 const bool silent_mode = true;
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool test_correlation = true;
+    bool test_correlation = false;
 
     if (test_correlation) {
         std::printf("//----------------------------------------------------------------------//\n");
@@ -66,25 +66,48 @@ int main(int argc, char** argv)
 
        
 
-        const size_t width = 128;
-        const size_t height = 128;
+        size_t width = 128;
+        size_t height = 128;
 
         /* Correlation flow variables */
-        size_t  correlation_window_size = 18;
+        size_t  correlation_window_size = 30;
 
+
+  string  file_name1              = "real_frame-128-128.raw";
+  string  input_path              =  "./data/";
+  string  output_path             =  "./data/output/";
+  string  counter                 =  "";
 
         /*------------------------------------------------------*/
         /*               Correlation algorithm                  */
         /*------------------------------------------------------*/
 
+  if (argc == 5 || argc == 6)  {
+
+    file_name1 = argv[1];
+
+    width = atoi(argv[2]);
+    height = atoi(argv[3]);
+    output_path = string(argv[5]);
+
+    if (argc == 6)
+        counter = argv[4];
+	
+
+  }
+   else if (argc != 1) {
+    cout<<"Usage: "<< argv[0] <<" <settings file>. Otherwise settings.xml in the current directory is used"<<endl;
+    return 0;
+    
+  }
         /* Correlation flow computation class */
         CorrelationFlow2D correlation_flow;
-
+  
         Data2D image;
         DataSize3 image_size ={ width, height, 1 };
 
         /* Load input data */
-        if (!image.ReadRAWFromFileF32("./data/real_frame-128-128.raw", image_size.width, image_size.height)) {
+        if (!image.ReadRAWFromFileF32((file_name1).c_str(), image_size.width, image_size.height)) {
             //if (!image.ReadRAWFromFileU8("./data/squares_many.raw", image_size.width, image_size.height)) {
             //if (!image.ReadRAWFromFileF32("./data/73_flat_corr.raw", image_size.width, image_size.height)) {
             return 2;
@@ -118,15 +141,15 @@ int main(int argc, char** argv)
                 "-" + std::to_string(width*correlation_window_size) +
                 "-" + std::to_string(height*correlation_window_size) + ".raw";
 
-            flow_x.WriteRAWToFileF32(std::string("./data/output/corr-flow-x" + filename).c_str());
-            flow_y.WriteRAWToFileF32(std::string("./data/output/corr-flow-y" + filename).c_str());
-            corr.WriteRAWToFileF32(std::string("./data/output/corr-coeff" + filename).c_str());
+            flow_x.WriteRAWToFileF32(std::string(output_path + counter + "corr-flow-x" + filename).c_str());
+            flow_y.WriteRAWToFileF32(std::string(output_path + counter + "corr-flow-y" + filename).c_str());
+            corr.WriteRAWToFileF32(std::string(output_path + counter + "corr-coeff" + filename).c_str());
 
-            corr_temp.WriteRAWToFileF32(std::string("./data/output/corr-temp" + filename_ext).c_str());
+           // corr_temp.WriteRAWToFileF32(std::string(output_path + "/corr-temp" + filename_ext).c_str());
 
-            IOUtils::WriteFlowToImageRGB(flow_x, flow_y, 3, "./data/output/corr-res.pgm");
+            IOUtils::WriteFlowToImageRGB(flow_x, flow_y, 3, output_path + counter + "corr-res.pgm");
 
-            IOUtils::WriteMagnitudeToFileF32(flow_x, flow_y, std::string("./data/output/corr-amp" + filename).c_str());
+            IOUtils::WriteMagnitudeToFileF32(flow_x, flow_y, std::string(output_path + counter + "corr-amp" + filename).c_str());
 
 
 
@@ -155,20 +178,20 @@ int main(int argc, char** argv)
 
 
   /* Dataset variables */
-    const size_t width = 584; //584;
-    const size_t height = 388; ////388;
+    size_t width = 584; //584;
+    size_t height = 388; ////388;
 
 
   /* Optical flow variables */
-  size_t  warp_levels_count       = 20;
+  size_t  warp_levels_count       = 50;
   float   warp_scale_factor       = 0.9f;
   size_t  outer_iterations_count  = 40;
   size_t  inner_iterations_count  = 5;
-  float   equation_alpha          = 3.5f; // 3.5f;
+  float   equation_alpha          = 35.0f; // 3.5f;
   float   equation_smoothness     = 0.001f;
   float   equation_data           = 0.001f;
   size_t  median_radius           = 5;
-  float   gaussian_sigma          = 0.75f;
+  float   gaussian_sigma          = 1.5f;
 
   DataConstancy data_constancy    = DataConstancy::Grey;
 
@@ -176,6 +199,7 @@ int main(int argc, char** argv)
   string  file_name2              = "rub2.raw";
   string  input_path              =  "./data/";
   string  output_path             =  "./data/output/";
+  string  counter                 =  "";
 
 
   /* Optical flow computation class */
@@ -184,16 +208,44 @@ int main(int argc, char** argv)
   
   Data2D frame_0;
   Data2D frame_1;
-  DataSize3 data_size ={ width, height, 1 };
 
   /* Read settings */
   string settingsPath = "settings.xml";
 
-  if (argc > 2)  {
-      cout<<"usage: "<< argv[0] <<" <settings file>. Otherwise settings.xml in the current directory is used"<<endl;
+  /*
+    Usage:
+
+    1. cuda-flow2d. settings.xml in the current directory will be used for settings
+    2. cuda-flow2d <settings file>
+    3. cuda-flow2d <file1> <file2> <image_width> <image_height>
+  */
+
+  if (argc == 6 || argc == 7 || argc == 9)  {
+
+    file_name1 = argv[1];
+    file_name2 = argv[2];
+
+    output_path = string(argv[6]);
+    
+    width = atoi(argv[3]);
+    height = atoi(argv[4]);
+
+    if (argc == 7)
+        counter = argv[5];
+    
+    if (argc == 9){
+       equation_alpha = atof(argv[7]);
+       gaussian_sigma = atof(argv[8]);
+       counter = "alpha"+ string(argv[7])+"_sigma"+ string(argv[8])+"_";
+    }
+
+    //cout<<"File: "<<file_name1<<endl;
+    //cout<<"Width: "<<width<<endl;
+    //cout<<"Counter: "<<counter<<endl;
+    //cout<<"Output path: "<<output_path<<endl;
   }
-  else if (argc != 1) {
-      string settingsFile = (argc == 1) ? settingsPath : string(argv[1]);
+  else if (argc < 3) {
+      string settingsFile = (argc==1)? settingsPath : string(argv[1]); 
 
       // Create Settings class
       cout<<"Reading settings: "<<settingsFile<<endl;;
@@ -216,6 +268,12 @@ int main(int argc, char** argv)
       else
           cout<<"OK"<<endl<<endl;
 
+      width = settings.width;
+      height = settings.height;
+      input_path = settings.inputPath;
+      output_path = settings.outputPath;
+      file_name1 = settings.fileName1;
+      file_name2 = settings.fileName2;
       warp_levels_count = settings.levels;
       warp_scale_factor = settings.warpScale;
       outer_iterations_count = settings.iterOuter;
@@ -224,15 +282,18 @@ int main(int argc, char** argv)
       equation_data = settings.e_data;
       equation_smoothness = settings.e_smooth;
       median_radius = settings.medianRadius;
-      gaussian_sigma = settings.sigma;
-
-    
+      gaussian_sigma = settings.sigma;   
+  } else {
+    cout<<"Usage: "<< argv[0] <<" <settings file>. Otherwise settings.xml in the current directory is used"<<endl;
+    return 0; 
   }
 
 
+  DataSize3 data_size ={ width, height, 1 };
+
   /* Load input data */
-  if (!frame_0.ReadRAWFromFileU8("./data/rub1.raw", data_size.width, data_size.height) ||
-      !frame_1.ReadRAWFromFileU8("./data/rub2.raw", data_size.width, data_size.height)) {
+  if (!frame_0.ReadRAWFromFileF32((file_name1).c_str(), data_size.width, data_size.height) ||
+      !frame_1.ReadRAWFromFileF32((file_name2).c_str(), data_size.width, data_size.height)) {
       return 2;
  } 
 
@@ -265,12 +326,11 @@ int main(int argc, char** argv)
       "-" + std::to_string(width) +
       "-" + std::to_string(height) + ".raw";
 
-    flow_u.WriteRAWToFileF32(std::string("./data/output/flow-u" + filename).c_str());
-    flow_v.WriteRAWToFileF32(std::string("./data/output/flow-v" + filename).c_str());
+    flow_u.WriteRAWToFileF32(std::string(output_path + counter + "flow-u" + filename).c_str());
+    flow_v.WriteRAWToFileF32(std::string(output_path + counter + "flow-v" + filename).c_str());
 
-    IOUtils::WriteFlowToImageRGB(flow_u, flow_v, 3, "./data/output/res.pgm");
-
-
+    IOUtils::WriteFlowToImageRGB(flow_u, flow_v, 10, output_path + counter + "res.pgm");
+    IOUtils::WriteMagnitudeToFileF32(flow_u, flow_v, std::string(output_path + counter + "amp" + filename).c_str());
 
     optical_flow.Destroy();
   }
