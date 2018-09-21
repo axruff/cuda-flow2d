@@ -355,7 +355,6 @@ extern "C" __global__ void select_peak_2d(
     size_t global_x = global_id.x < width ? global_id.x : 2 * width - global_id.x - 2;
     size_t global_y = global_id.y < height ? global_id.y : 2 * height - global_id.y - 2;
 
-    float max_val = 0.0f;
 
     float m1 = 0.0f;
     float m2 = 0.0f;
@@ -367,9 +366,6 @@ extern "C" __global__ void select_peak_2d(
     float y2 = 0.0f;
 
     const float EPS = 1e-5;
-
-
-    float peak_threshold = 0.1f;
 
 
     if (global_id.x < width && global_id.y < height) {
