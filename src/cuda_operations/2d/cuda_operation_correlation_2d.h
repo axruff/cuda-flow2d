@@ -1,8 +1,8 @@
 /**
-* @file    2D Optical flow using NVIDIA CUDA
+* @file    2D Autocorrelation flow using NVIDIA CUDA
 * @author  Institute for Photon Science and Synchrotron Radiation, Karlsruhe Institute of Technology
 *
-* @date    2015-2018
+* @date    2018
 * @version 0.5.0
 *
 *
