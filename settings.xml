@@ -3,10 +3,10 @@
 <OpticalFlow>
   
   <Input>
-    <Path inputPath="/users/opid19/dev/flow/data/"/>
+    <Path inputPath="c:\Users\fe0968\Documents\gpuflow3d\gpuflow2d\data\"/>
     
-    <Mode Nx="400" Ny="250" imageType="8-bit">
-    	<Files file1 ="frame1.raw" file2 ="frame2.raw"/>
+    <Mode Nx="128" Ny="128" imageType="8-bit">
+    	<Files file1 ="real_frame-128-128.raw" file2 ="frame2.raw"/>
     </Mode>
   </Input>
 
@@ -22,6 +22,6 @@
   </Parameters>
 
   <Output>
-    <Path outputPath="/users/opid19/dev/flow/data/output/"/>
+    <Path outputPath="c:\Users\fe0968\Documents\gpuflow3d\gpuflow2d\data\output\"/>
   </Output>
 </OpticalFlow>

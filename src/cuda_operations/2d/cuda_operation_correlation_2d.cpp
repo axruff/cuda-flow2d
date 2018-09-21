@@ -172,7 +172,9 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
 
     
 
-    CheckCudaError(cuStreamSynchronize(NULL));
+    //CheckCudaError(cuStreamSynchronize(NULL));
+
+    cout<<"Here everything is OK\n";
     
     /*-------------------------------------------*/
     /* Step 2: Find peaks*/
@@ -214,7 +216,10 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
         NULL));
 
 
-    CheckCudaError(cuStreamSynchronize(NULL));
+    //CheckCudaError(cuStreamSynchronize(NULL));
+
+    cout<<"And here\n";
+    
 
 
     /*---------------------------------------------------------------*/
@@ -231,8 +236,8 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
 
     void* args3[8] ={
         &dev_corr_max_ext,
-        &ext_width,
-        &ext_height,
+        &data_size.width,
+        &data_size.height,
         &corr_window_size,
         &extended_pitch_size,
         &dev_flow_x,
@@ -246,5 +251,8 @@ void CudaOperationCorrelation2D::Execute(OperationParameters& params)
         NULL,
         args3,
         NULL));
+
+    cout<<"Problem!\n";
+    
 
 }

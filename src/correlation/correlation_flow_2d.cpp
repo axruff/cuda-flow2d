@@ -34,7 +34,6 @@ using namespace std;
 
 CorrelationFlow2D::CorrelationFlow2D() :name_{ "Correlation Flow 2D Single GPU"}
 {
-    cuda_operations_.push_front(&cuop_add_);
     cuda_operations_.push_front(&cuop_correlation_);
 
 }
@@ -195,9 +194,9 @@ bool CorrelationFlow2D::InitCudaMemory()
 
             dev_container_extended_size_.pitch = pitch_extended;
 
-            cout<<"Device containers:"<<endl;
-            cout<<dev_container_extended_corr<<endl;
-            cout<<dev_container_extended_corr_max<<endl;
+            //cout<<"Device containers:"<<endl;
+            //cout<<dev_container_extended_corr<<endl;
+            //cout<<dev_container_extended_corr_max<<endl;
 
         }
 
@@ -319,12 +318,12 @@ void CorrelationFlow2D::Destroy()
         std::printf("Warning. Not all device memory allocations were freed.\n");
     }
 
-    /*cout<<"Device containers (before delete):"<<endl;
+   /* cout<<"Device containers (before delete):"<<endl;
     cout<<dev_container_extended_corr<<endl;
-    cout<<dev_container_extended_corr_max<<endl;
+    cout<<dev_container_extended_corr_max<<endl;*/
 
     CheckCudaError(cuMemFree(dev_container_extended_corr));
-    CheckCudaError(cuMemFree(dev_container_extended_corr_max));*/
+    CheckCudaError(cuMemFree(dev_container_extended_corr_max));
 
 
     initialized_ = false;
@@ -334,5 +333,5 @@ void CorrelationFlow2D::Destroy()
 
 CorrelationFlow2D::~CorrelationFlow2D()
 {
-    Destroy();
+    //Destroy();
 }

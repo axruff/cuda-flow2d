@@ -39,7 +39,7 @@
 using namespace OpticFlow;
 
 
-const bool key_press = false;
+const bool key_press = true;
 const bool use_visualization = false;
 const bool silent_mode = true;
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool test_correlation = false;
+    bool test_correlation = true;
 
     if (test_correlation) {
         std::printf("//----------------------------------------------------------------------//\n");
@@ -67,15 +67,15 @@ int main(int argc, char** argv)
        
 
         size_t width = 128;
-        size_t height = 128;
+        size_t height = 100;
 
         /* Correlation flow variables */
-        size_t  correlation_window_size = 30;
+        size_t  correlation_window_size = 18;
 
 
-  string  file_name1              = "real_frame-128-128.raw";
-  string  input_path              =  "./data/";
-  string  output_path             =  "./data/output/";
+  string  file_name1              = "real_frame-128-100.raw";
+  string  input_path              =  "c:\\Users\\fe0968\\Documents\\gpuflow3d\\gpuflow2d\\data\\";
+  string  output_path             =  "c:\\Users\\fe0968\\Documents\\gpuflow3d\\gpuflow2d\\data\\output\\";
   string  counter                 =  "";
 
         /*------------------------------------------------------*/
@@ -100,6 +100,8 @@ int main(int argc, char** argv)
     return 0;
     
   }
+
+   cout<<output_path<<endl;
         /* Correlation flow computation class */
         CorrelationFlow2D correlation_flow;
   
@@ -107,7 +109,7 @@ int main(int argc, char** argv)
         DataSize3 image_size ={ width, height, 1 };
 
         /* Load input data */
-        if (!image.ReadRAWFromFileF32((file_name1).c_str(), image_size.width, image_size.height)) {
+        if (!image.ReadRAWFromFileF32((input_path + file_name1).c_str(), image_size.width, image_size.height)) {
             //if (!image.ReadRAWFromFileU8("./data/squares_many.raw", image_size.width, image_size.height)) {
             //if (!image.ReadRAWFromFileF32("./data/73_flat_corr.raw", image_size.width, image_size.height)) {
             return 2;
@@ -145,7 +147,7 @@ int main(int argc, char** argv)
             flow_y.WriteRAWToFileF32(std::string(output_path + counter + "corr-flow-y" + filename).c_str());
             corr.WriteRAWToFileF32(std::string(output_path + counter + "corr-coeff" + filename).c_str());
 
-           // corr_temp.WriteRAWToFileF32(std::string(output_path + "/corr-temp" + filename_ext).c_str());
+            corr_temp.WriteRAWToFileF32(std::string(output_path + "corr-temp" + filename_ext).c_str());
 
             IOUtils::WriteFlowToImageRGB(flow_x, flow_y, 3, output_path + counter + "corr-res.pgm");
 

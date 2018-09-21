@@ -28,7 +28,6 @@
 #include <cuda.h>
 
 #include "src/cuda_operations/cuda_operation_base.h"
-#include "src/cuda_operations/2d/cuda_operation_add_2d.h"
 #include "src/cuda_operations/2d/cuda_operation_correlation_2d.h"
 
 #include "src/data_types/operation_parameters.h"
@@ -53,7 +52,6 @@ private:
     std::forward_list<CudaOperationBase*> cuda_operations_;
     std::stack<CUdeviceptr> cuda_memory_ptrs_;
 
-    CudaOperationAdd2D cuop_add_;
     CudaOperationCorrelation2D cuop_correlation_;
 
 
