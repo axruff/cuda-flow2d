@@ -307,7 +307,7 @@ extern "C" __global__ void find_peak_2d(
                 float val = shared[SIND(lx, ly)];
 
                 //if (blockIdx.x == 1 && blockIdx.y == 0 && lx == 9 && ly == 9)
-                 //   std::printf("lx:%u ly:%u dval: %f \n", lx, ly, val);
+                //   std::printf("lx:%u ly:%u dval: %f \n", lx, ly, val);
 
                 if (val > local_max)
                     local_max = val;
@@ -318,9 +318,7 @@ extern "C" __global__ void find_peak_2d(
         }
 
         //corr_ext[EIND(global_id.x, global_id.y)] = global_id.x;
-
         //corr_ext[EIND(global_id.x, global_id.y)] = local_max;
-
         //corr_ext[EIND(global_id.x, global_id.y)] = shared[SIND(threadIdx.x, threadIdx.y)];
 
         float val = shared[SIND(threadIdx.x, threadIdx.y)];
@@ -353,12 +351,6 @@ extern "C" __global__ void select_peak_2d(
     dim3 global_id(blockDim.x * blockIdx.x + threadIdx.x,
         blockDim.y * blockIdx.y + threadIdx.y);
 
-    const int radius_2 = window_size / 2.0;
-
-    dim3 shared_block_size(
-        blockDim.x + 2 * radius_2,
-        blockDim.y + 2 * radius_2
-        );
 
     size_t global_x = global_id.x < width ? global_id.x : 2 * width - global_id.x - 2;
     size_t global_y = global_id.y < height ? global_id.y : 2 * height - global_id.y - 2;
@@ -379,28 +371,34 @@ extern "C" __global__ void select_peak_2d(
 
     float peak_threshold = 0.1f;
 
-    for (int i=0; i<window_size; i++) {
-        for (int j=0; j<window_size; j++) {
-            float val = input[EIND(global_id.x*window_size+i, global_id.y*window_size+j)];
-
-            if (val > m1 && (fabsf(val - 1.0f) > EPS)) {
-                m1 = val;
-                x1 = i;
-                y1 = j;
-            }
-
-      
-            if (val > m2 && (fabsf(val - 1.0f) > EPS) && ((i != x1) || (j != y1))) {
-                m2 = val;
-                x2 = i;
-                y2 = j;
-            }
-          
-        }
-    }
 
     if (global_id.x < width && global_id.y < height) {
 
+        for (int i=0; i<window_size; i++) {
+            for (int j=0; j<window_size; j++) {
+          
+
+                float val = input[EIND(global_x *window_size+i, global_y*window_size+j)];
+
+
+                if (val > m1 && (fabsf(val - 1.0f) > EPS)) {
+                    m1 = val;
+                    x1 = i;
+                    y1 = j;
+                }
+
+      
+                if (val > m2 && (fabsf(val - 1.0f) > EPS) && ((i != x1) || (j != y1))) {
+                    m2 = val;
+                    x2 = i;
+                    y2 = j;
+                }
+
+          
+            }
+        }
+
+ 
         float m = 0.0f;
         float x = 0.0f;
         float y = 0.0f;
@@ -410,9 +408,9 @@ extern "C" __global__ void select_peak_2d(
         y = (m1 > m2) ? y1 : y2;
 
 
-        corr[IND(global_x, global_y)] = m;
-        flow_x[IND(global_x, global_y)] = x - window_size / 2.0;
-        flow_y[IND(global_x, global_y)] = y - window_size / 2.0;
+        corr[IND(global_id.x, global_id.y )] = m;
+        flow_x[IND(global_id.x, global_id.y)] = x - window_size / 2.0;
+        flow_y[IND(global_id.x, global_id.y)] = y - window_size / 2.0;
     }
 
 }
