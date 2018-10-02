@@ -1,7 +1,9 @@
 # GPU-based 2D Optical flow using NVIDIA CUDA
 
 Optical flow using variational methods which determine the unknown displacement field as a minimal solution
-of the energy functional. In general, such energy-based formulations are composed of two
+of the energy functional. 
+
+In general, such energy-based formulations are composed of two
 parts: a data term which assumes constancy of specific image features, and a smoothness
 term which regularizes the spatial variation of the flow field.
 
@@ -20,9 +22,10 @@ term which regularizes the spatial variation of the flow field.
    * under varying illumination (brightness changes) 
    * with respect to artifacts
 
+## Example
 
+![alt text](https://github.com/axruff/cuda-flow2d/raw/master/examples/insect.png "Moving insect")
+Figure: Fast radiography of the feeding cockroach Periplaneta americana. (a) First frame of the radiographic sequence (the background is removed and contrast is adjusted). (b) Computed flow field, which captures the movements of the insect. (c) Color coding: color represents direction and its brightness represents flow magnitude.
 
 ## Model
-
-## Examples
 
