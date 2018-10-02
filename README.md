@@ -8,15 +8,15 @@ parts: a *data term* which assumes constancy of specific image features, and a *
 
 ## Features
 
-* Computational model guarantees:
+* **Computational model guarantees**:
    * a unique solution (global optimal solution)
    * stability of the algorithm (no critical dependence on parameters)
-* High quality:
+* **High quality**:
    * dense flow results (one displacement for each pixel)
    * allows large displacements
    * different types of motion (translation, rotation, local elastic transformation)
    * sub-pixel accuracy
-* Robustness:
+* **Robustness**:
    * under noise
    * under varying illumination (brightness changes) 
    * with respect to artifacts
@@ -25,7 +25,7 @@ parts: a *data term* which assumes constancy of specific image features, and a *
 
 ![alt text](https://github.com/axruff/cuda-flow2d/raw/master/examples/insect.png "Moving insect")
 
-Figure: Head of the feeding cockroach *Periplaneta americana* imaged by fast X-ray radiography. (a) First frame of the radiographic sequence. (b) Computed flow field, which captures the movements of the insect during chewing process. (c) Color coding: color represents direction and its brightness represents flow magnitude.
+**Figure**: Head of the feeding cockroach *Periplaneta americana* imaged by fast X-ray radiography. **(a)** First frame of the radiographic sequence. **(b)** Computed flow field, which captures the movements of the insect during chewing process. **(c)** Color coding: color represents direction and its brightness represents flow magnitude.
 
 ## Model
 
@@ -42,7 +42,7 @@ and t denotes time frame: u, v - are the unknown displacement components and
 is the smoothness penalty function which corresponds to the total variation (TV) regularization.
 
 
-Features of the optical flow model:
+**Features of the optical flow model**:
 * Brightness constancy data term [1]
 * Gradient constancy data term [2]
 * Data term based on higher-order derivatives [3]
