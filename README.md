@@ -30,11 +30,11 @@ parts: a *data term* which assumes constancy of specific image features, and a *
 ## Model
 
 
-In a short form The 2D variational optical flow model using *grey value constancy* and the *flow-driven smoothness* approach is given by:
+In a short form The 2D variational optical flow model using *grey value constancy* and the *flow-driven smoothness*.:
 
 <img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">
 
-<img src="https://render.githubusercontent.com/render/math?math=E_{2D}(u,v) = \int_{\Omega_{2}}{|I(x + u,y + v,t + 1) - I(x,y,t)|  + \alpha \Psi(|\nabla_{2}u|^2  + |\nabla_{2}v|^2) \text{d}x \text{d}y}."> 
+<img src="https://render.githubusercontent.com/render/math?math=E_{2D}(u,v) = \int_{\Omega_{2}}{|I(x + u, y + v, t + 1) - I(x,y,t)| + \alpha \Psi(|\nabla_{2}u|^2  + |\nabla_{2}v|^2) \text{d}x \text{d}y}."> 
 
 **Features of the optical flow model**:
 * Brightness constancy data term [1]
