@@ -29,10 +29,6 @@ parts: a *data term* which assumes constancy of specific image features, and a *
 
 ## Model
 
-
-The 2D variational optical flow model contains *data constancy* and *smoothness* constraints.
-
-**Features of the optical flow model**:
 * Brightness constancy data term [1]
 * Gradient constancy data term [2]
 * Data term based on higher-order derivatives [3]
