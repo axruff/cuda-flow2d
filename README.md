@@ -21,11 +21,11 @@ parts: a *data term* which assumes constancy of specific image features, and a *
    * under varying illumination (brightness changes) 
    * with respect to artifacts
 
-## Example
+## Examples
 
 ![alt text](https://github.com/axruff/cuda-flow2d/raw/master/examples/optical_flow_example.png "Examples")
 
-**Figure**: **Left**: Head of the feeding cockroach *Periplaneta americana* imaged by fast X-ray radiography and computed flow field, which captures the movements of the insect during chewing process. **Right** Flow dynamics of liquid droplets in a fuel spray. Color coding: color represents direction and its brightness represents flow magnitude.
+**Figure**: **Left**: Head of the feeding cockroach *Periplaneta americana* imaged by fast X-ray radiography and computed flow field, which captures the movements of the insect during chewing process. **Right**: Flow dynamics of liquid droplets in a fuel spray. Color coding: color represents direction and its brightness represents flow magnitude.
 
 ## Model
 
