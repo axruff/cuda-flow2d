@@ -23,9 +23,9 @@ parts: a *data term* which assumes constancy of specific image features, and a *
 
 ## Example
 
-![alt text](https://github.com/axruff/cuda-flow2d/raw/master/examples/insect.png "Moving insect")
+![alt text](https://github.com/axruff/cuda-flow2d/raw/master/examples/optical_flow_example.png "Examples")
 
-**Figure**: Head of the feeding cockroach *Periplaneta americana* imaged by fast X-ray radiography. **(a)** First frame of the radiographic sequence. **(b)** Computed flow field, which captures the movements of the insect during chewing process. **(c)** Color coding: color represents direction and its brightness represents flow magnitude.
+**Figure**: **Left**: Head of the feeding cockroach *Periplaneta americana* imaged by fast X-ray radiography and computed flow field, which captures the movements of the insect during chewing process. **Right** Flow dynamics of liquid droplets in a fuel spray. Color coding: color represents direction and its brightness represents flow magnitude.
 
 ## Model
 
