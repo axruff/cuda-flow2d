@@ -34,14 +34,7 @@ In a short form The 2D variational optical flow model using *grey value constanc
 
 <img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">
 
-<img src="https://render.githubusercontent.com/render/math?math=E_{2D}(u,v)&space;=&space;\int_{\Omega_{2}}{|I(x&plus;u,y&plus;v,t&plus;1)&space;-&space;I(x,y,t)|&space;&plus;&space;\alpha&space;\Psi(|\nabla_{2}u|^2&space;&plus;&space;|\nabla_{2}v|^2)&space;\text{d}x&space;\text{d}y}.&space;$$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$$&space;E_{2D}(u,v)&space;=&space;\int_{\Omega_{2}}{|I(x&plus;u,y&plus;v,t&plus;1)&space;-&space;I(x,y,t)|&space;&plus;&space;\alpha&space;\Psi(|\nabla_{2}u|^2&space;&plus;&space;|\nabla_{2}v|^2)&space;\text{d}x&space;\text{d}y}.&space" >
-
-I(x, y, t) is a sequence of input images, where (x, y) are the pixel coordinates within a rectangular image domain
-and t denotes time frame: u, v - are the unknown displacement components and 
-
-<a href="https://www.codecogs.com/eqnedit.php?latex=$\Psi(x)&space;=&space;\sqrt{x&space;&plus;&space;\epsilon}$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$\Psi(x)&space;=&space;\sqrt{x&space;&plus;&space;\epsilon}$" title="$\Psi(x) = \sqrt{x + \epsilon}$" /></a>
-
-is the smoothness penalty function which corresponds to the total variation (TV) regularization.
+<img src="https://render.githubusercontent.com/render/math?math=E_{2D}(u,v) = \int_{\Omega_{2}}{|I(x +u,y +v,t +1) - I(x,y,t)|  + \alpha \Psi(|\nabla_{2}u|^2  + |\nabla_{2}v|^2) \text{d}x \text{d}y}. $$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$$ E_{2D}(u,v) = \int_{\Omega_{2}}{|I(x +u,y +v,t +1) - I(x,y,t)|  + \alpha \Psi(|\nabla_{2}u|^2  + |\nabla_{2}v|^2) \text{d}x \text{d}y}" >
 
 
 **Features of the optical flow model**:
